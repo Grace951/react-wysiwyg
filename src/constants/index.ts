@@ -10,10 +10,23 @@ export const WIDGET_TYPE = {
 };
 
 export const CANVAS_STATE = {
-  adding: 'selecting',
+  adding: 'adding',
   selecting: 'selecting',
   resizing: 'resizing',
   normal: 'normal',
+  moving: 'moving',
+  disable: 'disable',
+};
+
+export const CANVAS_EVENT = {
+  clickDrawObj: 'clickDrawObj',
+  clickCanvas: 'clickCanvas',
+  mouseDownOnDrawObj: 'mouseDownOnDrawObj',
+  mouseDownOnCtrlFrameVertix: 'mouseDownOnCtrlFrameVertix',
+  mouseMoving: 'mouseMoving',
+  mouseUp: 'mouseUp',
+  disable: 'disable',
+  enable: 'enable',
 };
 
 export const ELEMENT_ROLE = {

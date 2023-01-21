@@ -1,18 +1,21 @@
-import type { FC } from 'react';
-import { useRef, useState } from 'react';
+import type { FC, ReactEventHandler } from 'react';
+import { useRef, useState, useCallback } from 'react';
 
-import { enableMapSet } from 'immer';
-import { DrawObject, Dimension } from '../typings';
+import { createMachine, assign } from 'xstate';
+import { useMachine } from '@xstate/react';
+
+import { DrawObject, CanvasEvent, CanvasStateType } from '../typings';
 import ControlFrame from './ControlFrame';
 import useHandleUserEvents from '../hooks/useHandleUserEvents';
-import { block, getElementRoleAndObjectIdxFromUserEvent } from '../utils';
-import { CANVAS_STATE, ELEMENT_ROLE } from '../constants';
+import {
+  block,
+  updateObjDimensions,
+  getDimensionDelta,
+  getElementRoleAndObjectIdxFromUserEvent,
+} from '../utils';
+import { CANVAS_STATE, ELEMENT_ROLE, CANVAS_EVENT } from '../constants';
 
 import styled from 'styled-components';
-
-enableMapSet();
-import produce from 'immer';
-
 const Container = styled.div<{ width: number; height: number }>`
   width: ${({ width }) => width}px;
   height: ${({ height }) => height}px;
@@ -27,54 +30,177 @@ const Object = styled.div`
   cursor: move;
 `;
 
+const BackGround = styled.div`
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+`;
+
 interface Props {
   drawObjects: DrawObject[];
   width: number;
   height: number;
 }
+interface CanvasContext {
+  activeDrawObjectIdx: number;
+  vertixIdx: number;
+}
+
+const canvasMachine = createMachine<CanvasContext, CanvasEvent>({
+  id: 'canvas',
+  initial: CANVAS_STATE.normal,
+  context: {
+    activeDrawObjectIdx: -1,
+    vertixIdx: -1,
+  },
+  states: {
+    [CANVAS_STATE.normal]: {
+      on: {
+        [CANVAS_EVENT.clickCanvas]: {
+          actions: 'clickCanvas',
+        },
+        [CANVAS_EVENT.clickDrawObj]: {
+          actions: 'clickDrawObj',
+        },
+        [CANVAS_EVENT.mouseDownOnCtrlFrameVertix]: {
+          actions: 'mouseDownFrameCtrlVertix',
+          target: CANVAS_STATE.resizing,
+        },
+        [CANVAS_EVENT.mouseDownOnDrawObj]: {
+          actions: 'mouseDownOnDrawObj',
+          target: CANVAS_STATE.moving,
+        },
+        [CANVAS_EVENT.disable]: CANVAS_STATE.disable,
+      },
+    },
+    [CANVAS_STATE.adding]: {
+      on: {
+        [CANVAS_EVENT.mouseUp]: {
+          target: CANVAS_STATE.normal,
+          actions: 'mouseUp',
+        },
+        [CANVAS_EVENT.mouseMoving]: {
+          actions: 'addingObj',
+        },
+      },
+    },
+    [CANVAS_STATE.resizing]: {
+      on: {
+        [CANVAS_EVENT.mouseUp]: {
+          target: CANVAS_STATE.normal,
+          actions: 'mouseUp',
+        },
+        [CANVAS_EVENT.mouseMoving]: {
+          actions: 'resizingObj',
+        },
+      },
+    },
+    [CANVAS_STATE.selecting]: {
+      on: {
+        [CANVAS_EVENT.mouseUp]: {
+          target: CANVAS_STATE.normal,
+          actions: 'mouseUp',
+        },
+        [CANVAS_EVENT.mouseMoving]: {
+          actions: 'selectingObjs',
+        },
+      },
+    },
+    [CANVAS_STATE.moving]: {
+      on: {
+        [CANVAS_EVENT.mouseUp]: {
+          target: CANVAS_STATE.normal,
+          actions: 'mouseUp',
+        },
+        [CANVAS_EVENT.mouseMoving]: {
+          actions: 'movingObj',
+        },
+      },
+    },
+    [CANVAS_STATE.disable]: {
+      on: {
+        [CANVAS_EVENT.enable]: CANVAS_STATE.normal,
+      },
+    },
+  },
+});
 
 const Canvas: FC<Props> = ({ drawObjects = [], width = 500, height = 500 }) => {
-  const canvasRef = useRef(null);
-  const [canvasState, setCanvasState] = useState(CANVAS_STATE.normal);
   const [objs, setObjs] = useState<DrawObject[]>(drawObjects);
-  const [activeDrawObjectIdx, setActiveDrawObjectIdx] = useState(-1);
+
+  const [
+    {
+      context: { activeDrawObjectIdx },
+      value: convasState,
+    },
+    send,
+  ] = useMachine(canvasMachine, {
+    actions: {
+      resizingObj: (context, event) => {
+        const { delta } = event;
+        updateObjDimensions(
+          getDimensionDelta(delta || { dx: 0, dy: 0 }, context.vertixIdx),
+          context.activeDrawObjectIdx,
+          setObjs
+        );
+      },
+      movingObj: (context, event) => {
+        const { delta } = event;
+        updateObjDimensions(
+          {
+            x: delta?.dx || 0,
+            y: delta?.dy || 0,
+            width: 0,
+            height: 0,
+          },
+          context.activeDrawObjectIdx,
+          setObjs
+        );
+      },
+      clickDrawObj: assign({
+        activeDrawObjectIdx: (ctx, event, { action, state }) => event.idx ?? -1,
+      }),
+      clickCanvas: assign({
+        activeDrawObjectIdx: (ctx, event, { action, state }) => -1,
+      }),
+      mouseDownOnDrawObj: assign({
+        activeDrawObjectIdx: (ctx, event, { action, state }) => event.idx ?? -1,
+        vertixIdx: (ctx, event, { action, state }) => event.vertixIdx ?? -1,
+      }),
+      mouseDownFrameCtrlVertix: assign({
+        vertixIdx: (ctx, event, { action, state }) => event.vertixIdx ?? -1,
+      }),
+      mouseUp: assign({
+        vertixIdx: (ctx, event, { action, state }) => -1,
+      }),
+    },
+  });
+  // console.log(convasState, activeDrawObjectIdx);
   const activeDrawObject =
     activeDrawObjectIdx >= 0 && objs[activeDrawObjectIdx];
 
-  const handleClickCanvas = () => {
-    setActiveDrawObjectIdx(-1);
-  };
-  const handleObjClick = (e) => {
-    block(e);
-  };
+  const canvasRef = useRef(null);
 
-  const updateObjDimensions = (delta: Dimension) => {
-    if (activeDrawObjectIdx < 0) {
-      return;
-    }
-    const nextState = produce(objs, (draftState) => {
-      const obj = objs[activeDrawObjectIdx];
-      draftState[activeDrawObjectIdx].x += delta.x ?? 0;
-      draftState[activeDrawObjectIdx].y += delta.y ?? 0;
-      draftState[activeDrawObjectIdx].width =
-        obj.width + (delta.width ?? 0) > 0
-          ? obj.width + (delta.width ?? 0)
-          : delta.width;
-      draftState[activeDrawObjectIdx].height =
-        obj.height + (delta.height ?? 0) > 0
-          ? obj.height + (delta.height ?? 0)
-          : delta.height;
-    });
+  const handleClickCanvas = useCallback<ReactEventHandler<HTMLDivElement>>(
+    (e) => {
+      send({ type: CANVAS_EVENT.clickCanvas });
+    },
+    [send]
+  );
 
-    setObjs(nextState);
-  };
+  const handleObjClick = useCallback<ReactEventHandler<HTMLDivElement>>(
+    (e) => {
+      block(e);
+    },
+    [send]
+  );
 
   const { handleMouseUp, handleMouseDown, handleMouseMove } =
     useHandleUserEvents({
-      canvasState,
-      setActiveDrawObjectIdx,
-      setCanvasState,
-      update: updateObjDimensions,
+      sendEvent: send,
+      convasState: convasState as CanvasStateType,
     });
 
   return (
@@ -85,8 +211,8 @@ const Canvas: FC<Props> = ({ drawObjects = [], width = 500, height = 500 }) => {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onClick={handleClickCanvas}
     >
+      <BackGround onClick={handleClickCanvas} />
       {activeDrawObject && (
         <ControlFrame
           width={activeDrawObject.width}

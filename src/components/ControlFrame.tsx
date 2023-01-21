@@ -88,7 +88,7 @@ const ControlFrame: FC<Props> = ({
           }}
           data-desc={vertex.desc}
           data-role={ELEMENT_ROLE.controlFrameVertex}
-          data-idx={idx}
+          data-vertix-idx={idx}
         />
       ))}
     </>

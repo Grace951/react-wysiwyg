@@ -1,131 +1,72 @@
 import type { MouseEvent } from 'react';
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 
 import {
+  block,
   getElementRoleAndObjectIdxFromUserEvent,
   getUserEventPosition,
 } from '../utils';
-import { CanvasState, Point, Dimension } from '../typings';
-import { CANVAS_STATE, ELEMENT_ROLE } from '../constants';
+import { Point, CanvasEvent, CanvasStateType } from '../typings';
+import { ELEMENT_ROLE, CANVAS_EVENT, CANVAS_STATE } from '../constants';
 
 function useHandleUserEvents({
-  setCanvasState,
-  canvasState,
-  update,
-  setActiveDrawObjectIdx,
+  sendEvent,
+  convasState,
 }: {
-  setCanvasState: (state: CanvasState) => void;
-  canvasState: CanvasState;
-  update: (delta: Dimension) => void;
-  setActiveDrawObjectIdx: (idx: number) => void;
+  sendEvent: (e: CanvasEvent) => void;
+  convasState: CanvasStateType;
 }) {
   const previousPoint = useRef<Point | null>(null);
+  const handleMouseDown = useCallback(
+    (e: MouseEvent) => {
+      const { x, y } = getUserEventPosition(e);
+      previousPoint.current = { x, y };
+      const { role, idx, vertixIdx } =
+        getElementRoleAndObjectIdxFromUserEvent(e);
 
-  function handleObjectMove(x: number, y: number) {
-    if (!previousPoint.current) {
-      return;
-    }
-    const { x: x0, y: y0 } = previousPoint.current;
-    const delta: Dimension = {
-      x: x - x0,
-      y: y - y0,
-      width: 0,
-      height: 0,
-    };
-    previousPoint.current = { x, y };
-    update(delta);
-  }
-  function handleAddingObject(x, y) {
-    if (!previousPoint.current) {
-      return;
-    }
+      switch (role) {
+        case ELEMENT_ROLE.controlFrameVertex:
+          sendEvent({
+            type: CANVAS_EVENT.mouseDownOnCtrlFrameVertix,
+            vertixIdx,
+          });
+          break;
+        case ELEMENT_ROLE.drawObject:
+          sendEvent({ type: CANVAS_EVENT.mouseDownOnDrawObj, idx });
+          break;
+        default:
+      }
+    },
+    [sendEvent]
+  );
 
-    const { x: x0, y: y0 } = previousPoint.current;
-  }
+  const handleMouseUp = useCallback(
+    (e: MouseEvent) => {
+      previousPoint.current = null;
+      sendEvent({ type: CANVAS_EVENT.mouseUp });
+    },
+    [sendEvent, convasState]
+  );
 
-  function handleSelectObject(x, y) {
-    if (!previousPoint.current) {
-      return;
-    }
-
-    const { x: x0, y: y0 } = previousPoint.current;
-  }
-
-  function handleObjectResize(x: number, y: number) {
-    if (!previousPoint.current) {
-      return;
-    }
-    const { x: x0, y: y0 } = previousPoint.current;
-    const delta: Dimension = {
-      x: 0,
-      y: 0,
-      width: x - x0,
-      height: y - y0,
-    };
-    previousPoint.current = { x, y };
-    update(delta);
-  }
-
-  function handleMouseDown(e: MouseEvent) {
-    if (canvasState !== CANVAS_STATE.normal) {
-      return;
-    }
-    const { x, y } = getUserEventPosition(e);
-
-    previousPoint.current = { x, y };
-    const { role, idx } = getElementRoleAndObjectIdxFromUserEvent(e);
-    switch (role) {
-      case ELEMENT_ROLE.controlFrameVertex:
-        setCanvasState(CANVAS_STATE.resizing);
-        break;
-      case ELEMENT_ROLE.drawObject:
-        if (idx !== null) {
-          setActiveDrawObjectIdx(idx);
-        }
-        break;
-      default:
-    }
-  }
-
-  const handleMouseUp = (e: MouseEvent) => {
-    previousPoint.current = null;
-
-    switch (canvasState) {
-      case CANVAS_STATE.normal:
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!previousPoint.current) {
         return;
-      case CANVAS_STATE.adding:
-        setCanvasState(CANVAS_STATE.normal);
-        break;
-      case CANVAS_STATE.selecting:
-        break;
-      case CANVAS_STATE.resizing:
-        setCanvasState(CANVAS_STATE.normal);
-        break;
-    }
-  };
+      }
 
-  const handleMouseMove = (e: MouseEvent) => {
-    const { x, y } = getUserEventPosition(e);
-    const { role } = getElementRoleAndObjectIdxFromUserEvent(e);
-    role && console.log(role);
-    switch (canvasState) {
-      case CANVAS_STATE.normal:
-        role === ELEMENT_ROLE.controlFrameVertex
-          ? handleObjectResize(x, y)
-          : handleObjectMove(x, y);
+      const { x, y } = getUserEventPosition(e);
+      const { x: x0, y: y0 } = previousPoint.current;
+      const dx = x - x0;
+      const dy = y - y0;
+      previousPoint.current = { x, y };
 
-        break;
-      case CANVAS_STATE.adding:
-        handleObjectResize(x, y);
-        break;
-      case CANVAS_STATE.resizing:
-        handleObjectResize(x, y);
-        break;
-      case CANVAS_STATE.selecting:
-        handleSelectObject(x, y);
-        break;
-    }
-  };
+      sendEvent({
+        type: CANVAS_EVENT.mouseMoving,
+        delta: { dx, dy },
+      });
+    },
+    [sendEvent]
+  );
 
   return { handleMouseMove, handleMouseDown, handleMouseUp };
 }
