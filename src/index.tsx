@@ -1,2 +1,2 @@
-import Button from './components/Button';
-export { Button };
+import Canvas from './components/Canvas';
+export { Canvas };
