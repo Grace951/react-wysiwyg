@@ -1,4 +1,4 @@
-import { Point, Dimension, DrawObject, PointDelta } from '../typings';
+import { Point, Dimension, DrawObject, PointDelta, Rect } from '../typings';
 import * as R from 'ramda';
 
 export function block(e) {
@@ -97,7 +97,7 @@ export const getDimensionDelta = (delta: PointDelta, vertixIdx: number) => {
   return { x, y, width, height };
 };
 
-export const calculateObjDimensions = (delta: Dimension, obj: DrawObject) => {
+export const calculateObjDimension = (delta: Dimension, obj: Dimension) => {
   const x = obj.x + delta.x ?? 0;
   const y = obj.y + delta.y ?? 0;
   const width =
@@ -122,8 +122,53 @@ export const updateObjDimensions = (
 
   const nextState = R.assocPath(
     [activeDrawObjectIdx],
-    calculateObjDimensions(delta, objs[activeDrawObjectIdx]),
+    calculateObjDimension(delta, objs[activeDrawObjectIdx]),
     objs
   );
   return nextState;
+};
+
+export const updateObjsDimensions = (
+  delta: Dimension,
+  selectedObjs: number[],
+  objs: DrawObject[]
+) => {
+  if (selectedObjs.length <= 0) {
+    return objs;
+  }
+
+  const nextState = selectedObjs.reduce((acc, cur) => {
+    return R.assocPath([cur], calculateObjDimension(delta, objs[cur]), acc);
+  }, objs);
+
+  return nextState;
+};
+
+export const dimensionToRect = (dimension: Dimension) => ({
+  left: dimension.x,
+  right: dimension.x + dimension.width,
+  top: dimension.y,
+  bottom: dimension.x + dimension.height,
+});
+
+export const getIntersectionOfTwoRect = (r1: Dimension, r2: Dimension) => {
+  const x = Math.max(r1.x, r2.x);
+  const y = Math.max(r1.y, r2.y);
+  const xx = Math.min(r1.x + r1.width, r2.x + r2.width);
+  const yy = Math.min(r1.y + r1.height, r2.y + r2.height);
+  return { x, y, width: xx - x, height: yy - y };
+};
+
+export const mergeTwoRect = (r1: Dimension, r2: Dimension) => {
+  return {
+    x: Math.min(r1.x, r2.x),
+    y: Math.min(r1.y, r2.y),
+    width: Math.max(r1.width, r2.width),
+    height: Math.max(r1.height, r2.height),
+  };
+};
+
+export const isInTheFrame = (frame: Dimension, obj: Dimension) => {
+  const { width, height } = getIntersectionOfTwoRect(frame, obj);
+  return width > 0 && height > 0;
 };

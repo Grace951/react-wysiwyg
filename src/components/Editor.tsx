@@ -50,19 +50,26 @@ interface Props {
 const Editor: FC = () => {
   const [
     {
-      context: { activeDrawObjectIdx, activeWidget, drawObjects },
+      context: {
+        activeDrawObjectIdx,
+        activeWidget,
+        drawObjects,
+        selectedObjs,
+        selectingFrame,
+      },
       value: editorState,
     },
     send,
   ] = useMachine(editorMachine, {
     context: {
+      selectingFrame: { x: 0, y: 0, width: 0, height: 0 },
       drawObjects: [],
+      selectedObjs: [],
       activeWidget: null,
       activeDrawObjectIdx: -1,
       vertixIdx: -1,
     },
   });
-  // console.log(activeDrawObjectIdx, activeWidget, drawObjects);
 
   const handleClickWidget = useCallback<ReactEventHandler<HTMLDivElement>>(
     (e) => {
@@ -93,6 +100,8 @@ const Editor: FC = () => {
       <Canvas
         activeDrawObjectIdx={activeDrawObjectIdx}
         drawObjects={drawObjects}
+        selectedObjs={selectedObjs}
+        selectingFrame={selectingFrame}
         editorState={editorState as EditorStateType}
         sendEvent={send}
       />

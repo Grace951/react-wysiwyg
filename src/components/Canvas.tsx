@@ -1,12 +1,18 @@
 import type { FC, ReactEventHandler } from 'react';
-import { useRef, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import styled from 'styled-components';
-import { EditorStateType, DrawObject, CanvasEvent } from '../typings';
+import {
+  EditorStateType,
+  DrawObject,
+  CanvasEvent,
+  Dimension,
+} from '../typings';
 import useHandleUserEvents from '../hooks/useHandleUserEvents';
 import { block } from '../utils';
-import { ELEMENT_ROLE, CANVAS_EVENT } from '../constants';
+import { ELEMENT_ROLE, CANVAS_EVENT, EDITOR_STATE } from '../constants';
 import ControlFrame from './ControlFrame';
+import SelectingFrame from './SelectingFrame';
 
 const Container = styled.div<{ width: number; height: number }>`
   width: ${({ width }) => width}px;
@@ -16,9 +22,11 @@ const Container = styled.div<{ width: number; height: number }>`
   position: relative;
 `;
 
-const DrawObjectElement = styled.div`
+const DrawObjectElement = styled.div<{ $selected: boolean }>`
   position: absolute;
   border: 1px solid #ddd;
+  background-color: ${({ $selected }) =>
+    $selected ? 'rgba(0, 100, 255, 0.13)' : 'transparent'};
   cursor: move;
 `;
 
@@ -34,8 +42,10 @@ interface Props {
   width?: number;
   height?: number;
   drawObjects: DrawObject[];
+  selectedObjs: number[];
   activeDrawObjectIdx: number;
   editorState: EditorStateType;
+  selectingFrame: Dimension;
   sendEvent: (e: CanvasEvent) => void;
 }
 
@@ -44,6 +54,8 @@ const Canvas: FC<Props> = ({
   height = 600,
   activeDrawObjectIdx = -1,
   drawObjects = [],
+  selectedObjs = [],
+  selectingFrame,
   editorState,
   sendEvent,
 }) => {
@@ -52,17 +64,9 @@ const Canvas: FC<Props> = ({
     [activeDrawObjectIdx, drawObjects]
   );
 
-  const handleClickCanvas = useCallback<ReactEventHandler<HTMLDivElement>>(
-    (e) => {
-      sendEvent({ type: CANVAS_EVENT.clickCanvas });
-    },
-    [sendEvent]
-  );
-
   const { canvasRef, handleMouseUp, handleMouseDown, handleMouseMove } =
     useHandleUserEvents({
       sendEvent,
-      editorState,
     });
 
   return (
@@ -74,10 +78,7 @@ const Canvas: FC<Props> = ({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      <BackGround
-        onClick={handleClickCanvas}
-        data-role={ELEMENT_ROLE.background}
-      />
+      <BackGround data-role={ELEMENT_ROLE.background} />
       {activeDrawObject && (
         <ControlFrame
           width={activeDrawObject.width}
@@ -89,6 +90,15 @@ const Canvas: FC<Props> = ({
         />
       )}
 
+      {editorState === EDITOR_STATE.selecting && (
+        <SelectingFrame
+          width={selectingFrame.width}
+          height={selectingFrame.height}
+          x={selectingFrame.x}
+          y={selectingFrame.y}
+        />
+      )}
+
       {drawObjects?.map((drawObject, idx) => (
         <DrawObjectElement
           draggable="false"
@@ -97,6 +107,7 @@ const Canvas: FC<Props> = ({
           data-role={ELEMENT_ROLE.drawObject}
           data-widget-type={drawObject.widgetType}
           onClick={block}
+          $selected={selectedObjs.includes(idx)}
           style={{
             left: drawObject.x,
             top: drawObject.y,

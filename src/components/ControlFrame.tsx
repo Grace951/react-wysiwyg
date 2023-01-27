@@ -32,39 +32,38 @@ const ControlFrame: FC<Props> = ({
   y = 0,
   vertexSize = DEF_FRAME_VERTEX_SIZE,
 }) => {
-  const borderAdjust = 1;
   const vertices: Vertix[] = [
     {
-      left: x - vertexSize / 2 + borderAdjust,
-      top: y - vertexSize / 2 + borderAdjust,
+      left: x - vertexSize / 2,
+      top: y - vertexSize / 2,
     },
     {
-      left: x + width / 2 - vertexSize / 2 + borderAdjust,
-      top: y - vertexSize / 2 + borderAdjust,
+      left: x + width / 2 - vertexSize / 2,
+      top: y - vertexSize / 2,
     },
     {
-      left: x + width - vertexSize / 2 + borderAdjust,
-      top: y - vertexSize / 2 + borderAdjust,
+      left: x + width - vertexSize / 2,
+      top: y - vertexSize / 2,
     },
     {
-      left: x + width - vertexSize / 2 + borderAdjust,
-      top: y + height / 2 - vertexSize / 2 + borderAdjust,
+      left: x + width - vertexSize / 2,
+      top: y + height / 2 - vertexSize / 2,
     },
     {
-      left: x + width - vertexSize / 2 + borderAdjust,
-      top: y + height - vertexSize / 2 + borderAdjust,
+      left: x + width - vertexSize / 2,
+      top: y + height - vertexSize / 2,
     },
     {
-      left: x + width / 2 - vertexSize / 2 + borderAdjust,
-      top: y + height - vertexSize / 2 + borderAdjust,
+      left: x + width / 2 - vertexSize / 2,
+      top: y + height - vertexSize / 2,
     },
     {
-      left: x - vertexSize / 2 + borderAdjust,
-      top: y + height - vertexSize / 2 + borderAdjust,
+      left: x - vertexSize / 2,
+      top: y + height - vertexSize / 2,
     },
     {
-      left: x - vertexSize / 2 + borderAdjust,
-      top: y + height / 2 - vertexSize / 2 + borderAdjust,
+      left: x - vertexSize / 2,
+      top: y + height / 2 - vertexSize / 2,
     },
   ];
 

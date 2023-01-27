@@ -12,6 +12,7 @@ export const WIDGET_TYPE = {
 export const EDITOR_STATE = {
   adding: 'adding',
   selecting: 'selecting',
+  selected: 'selected',
   resizing: 'resizing',
   normal: 'normal',
   moving: 'moving',
@@ -39,6 +40,7 @@ export const ELEMENT_ROLE = {
   controlFrameVertex: 'controlFrameVertex',
   drawObject: 'drawObject',
   background: 'background',
+  selectingFrame: 'selectingFrame',
   na: 'na',
 };
 

@@ -6,15 +6,13 @@ import {
   getElementRoleAndObjectIdxFromUserEvent,
   getUserEventPosition,
 } from '../utils';
-import { Point, CanvasEvent, EditorStateType } from '../typings';
+import { Point, CanvasEvent } from '../typings';
 import { ELEMENT_ROLE, CANVAS_EVENT } from '../constants';
 
 function useHandleUserEvents({
   sendEvent,
-  editorState,
 }: {
   sendEvent: (e: CanvasEvent) => void;
-  editorState: EditorStateType;
 }) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const previousPoint = useRef<Point | null>(null);
@@ -25,7 +23,6 @@ function useHandleUserEvents({
       const { role, idx, vertixIdx, widgetType } =
         getElementRoleAndObjectIdxFromUserEvent(e);
 
-      console.log('widgetType', widgetType);
       switch (role) {
         case ELEMENT_ROLE.controlFrameVertex:
           sendEvent({
