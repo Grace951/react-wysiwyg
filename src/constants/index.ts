@@ -9,7 +9,7 @@ export const WIDGET_TYPE = {
   line: 'line',
 };
 
-export const CANVAS_STATE = {
+export const EDITOR_STATE = {
   adding: 'adding',
   selecting: 'selecting',
   resizing: 'resizing',
@@ -21,17 +21,24 @@ export const CANVAS_STATE = {
 export const CANVAS_EVENT = {
   clickDrawObj: 'clickDrawObj',
   clickCanvas: 'clickCanvas',
+  addDrawObj: 'addDrawObj',
   mouseDownOnDrawObj: 'mouseDownOnDrawObj',
   mouseDownOnCtrlFrameVertix: 'mouseDownOnCtrlFrameVertix',
+  mouseDownOnCanvas: 'mouseDownOnCanvas',
   mouseMoving: 'mouseMoving',
   mouseUp: 'mouseUp',
   disable: 'disable',
   enable: 'enable',
 };
 
+export const EDITOR_EVENT = {
+  selectWidget: 'selectWidget',
+};
+
 export const ELEMENT_ROLE = {
   controlFrameVertex: 'controlFrameVertex',
   drawObject: 'drawObject',
+  background: 'background',
   na: 'na',
 };
 

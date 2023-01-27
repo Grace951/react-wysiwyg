@@ -6,24 +6,26 @@ import {
   getElementRoleAndObjectIdxFromUserEvent,
   getUserEventPosition,
 } from '../utils';
-import { Point, CanvasEvent, CanvasStateType } from '../typings';
-import { ELEMENT_ROLE, CANVAS_EVENT, CANVAS_STATE } from '../constants';
+import { Point, CanvasEvent, EditorStateType } from '../typings';
+import { ELEMENT_ROLE, CANVAS_EVENT } from '../constants';
 
 function useHandleUserEvents({
   sendEvent,
-  convasState,
+  editorState,
 }: {
   sendEvent: (e: CanvasEvent) => void;
-  convasState: CanvasStateType;
+  editorState: EditorStateType;
 }) {
+  const canvasRef = useRef<HTMLDivElement>(null);
   const previousPoint = useRef<Point | null>(null);
   const handleMouseDown = useCallback(
     (e: MouseEvent) => {
-      const { x, y } = getUserEventPosition(e);
+      const { x, y } = getUserEventPosition(e, canvasRef.current);
       previousPoint.current = { x, y };
-      const { role, idx, vertixIdx } =
+      const { role, idx, vertixIdx, widgetType } =
         getElementRoleAndObjectIdxFromUserEvent(e);
 
+      console.log('widgetType', widgetType);
       switch (role) {
         case ELEMENT_ROLE.controlFrameVertex:
           sendEvent({
@@ -32,7 +34,10 @@ function useHandleUserEvents({
           });
           break;
         case ELEMENT_ROLE.drawObject:
-          sendEvent({ type: CANVAS_EVENT.mouseDownOnDrawObj, idx });
+          sendEvent({ type: CANVAS_EVENT.mouseDownOnDrawObj, idx, widgetType });
+          break;
+        case ELEMENT_ROLE.background:
+          sendEvent({ type: CANVAS_EVENT.mouseDownOnCanvas, point: { x, y } });
           break;
         default:
       }
@@ -45,7 +50,7 @@ function useHandleUserEvents({
       previousPoint.current = null;
       sendEvent({ type: CANVAS_EVENT.mouseUp });
     },
-    [sendEvent, convasState]
+    [sendEvent]
   );
 
   const handleMouseMove = useCallback(
@@ -54,7 +59,7 @@ function useHandleUserEvents({
         return;
       }
 
-      const { x, y } = getUserEventPosition(e);
+      const { x, y } = getUserEventPosition(e, canvasRef.current);
       const { x: x0, y: y0 } = previousPoint.current;
       const dx = x - x0;
       const dy = y - y0;
@@ -68,7 +73,7 @@ function useHandleUserEvents({
     [sendEvent]
   );
 
-  return { handleMouseMove, handleMouseDown, handleMouseUp };
+  return { handleMouseMove, handleMouseDown, handleMouseUp, canvasRef };
 }
 
 export default useHandleUserEvents;

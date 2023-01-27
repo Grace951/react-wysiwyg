@@ -1,5 +1,7 @@
 import { createGlobalStyle } from 'styled-components';
 
+const MaterialIconRegular = require('../fonts/MaterialIcons-Regular.ttf');
+
 const GlobalStyle = createGlobalStyle`
 
   *{
@@ -53,8 +55,6 @@ const GlobalStyle = createGlobalStyle`
   body {
     width: 100%;
     height: 100%;
-    color: ${({ theme }) => theme.colors.primary};
-    background-color: ${({ theme }) => theme.bgColors.primary};
     padding: 0;
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
@@ -67,13 +67,55 @@ const GlobalStyle = createGlobalStyle`
   }
   a, a:link, a:visited, a:hover, a:active {
     text-decoration: none;
-    color: ${({ theme }) => theme.colors.primary};
+    color: black;
   }
 
-  #__next{
-    width: 100%;
-    height: 100%;
+  @font-face {
+    font-family: 'Material Icons';
+    font-weight: 400;
+    font-style: normal;
+    src: local('Material Icons'), local('MaterialIcons-Regular'),
+      url(${MaterialIconRegular}) format('truetype');
   }
+
+  .material-icons {
+    display: inline-block;
+    font-family: 'Material Icons';
+    font-size: 24px; /* Preferred icon size */
+    font-weight: normal;
+    line-height: 1;
+    font-style: normal;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+
+    /* Support for Firefox. */
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Support for IE. */
+    font-feature-settings: 'liga';
+  }
+
+    /* Rules for sizing the icon. */
+  .material-icons.md-18 { font-size: 18px; }
+  .material-icons.md-24 { font-size: 24px; }
+  .material-icons.md-36 { font-size: 36px; }
+  .material-icons.md-48 { font-size: 48px; }
+
+  /* Rules for using icons as black on a light background. */
+  .material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
+  .material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+
+  /* Rules for using icons as white on a dark background. */
+  .material-icons.md-light { color: rgba(255, 255, 255, 1); }
+  .material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
 `;
 
 export default GlobalStyle;

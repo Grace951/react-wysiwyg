@@ -1,15 +1,12 @@
 import type { FC, ReactEventHandler } from 'react';
-import { useRef, useCallback } from 'react';
-
-import { useMachine } from '@xstate/react';
+import { useRef, useCallback, useMemo } from 'react';
 
 import styled from 'styled-components';
-import { DrawObject, CanvasStateType } from '../typings';
+import { EditorStateType, DrawObject, CanvasEvent } from '../typings';
 import useHandleUserEvents from '../hooks/useHandleUserEvents';
 import { block } from '../utils';
 import { ELEMENT_ROLE, CANVAS_EVENT } from '../constants';
 import ControlFrame from './ControlFrame';
-import { canvasMachine } from './CanvasMachine';
 
 const Container = styled.div<{ width: number; height: number }>`
   width: ${({ width }) => width}px;
@@ -19,7 +16,7 @@ const Container = styled.div<{ width: number; height: number }>`
   position: relative;
 `;
 
-const Object = styled.div`
+const DrawObjectElement = styled.div`
   position: absolute;
   border: 1px solid #ddd;
   cursor: move;
@@ -34,38 +31,38 @@ const BackGround = styled.div`
 `;
 
 interface Props {
+  width?: number;
+  height?: number;
   drawObjects: DrawObject[];
-  width: number;
-  height: number;
+  activeDrawObjectIdx: number;
+  editorState: EditorStateType;
+  sendEvent: (e: CanvasEvent) => void;
 }
 
-const Canvas: FC<Props> = ({ drawObjects = [], width = 500, height = 500 }) => {
-  const [
-    {
-      context: { activeDrawObjectIdx, drawObjects: objs },
-      value: convasState,
-    },
-    send,
-  ] = useMachine(canvasMachine, {
-    context: { drawObjects, activeDrawObjectIdx: -1, vertixIdx: -1 },
-  });
-  // console.log(convasState, activeDrawObjectIdx);
-  const activeDrawObject =
-    activeDrawObjectIdx >= 0 && objs[activeDrawObjectIdx];
-
-  const canvasRef = useRef(null);
+const Canvas: FC<Props> = ({
+  width = 800,
+  height = 600,
+  activeDrawObjectIdx = -1,
+  drawObjects = [],
+  editorState,
+  sendEvent,
+}) => {
+  const activeDrawObject = useMemo(
+    () => activeDrawObjectIdx >= 0 && drawObjects[activeDrawObjectIdx],
+    [activeDrawObjectIdx, drawObjects]
+  );
 
   const handleClickCanvas = useCallback<ReactEventHandler<HTMLDivElement>>(
     (e) => {
-      send({ type: CANVAS_EVENT.clickCanvas });
+      sendEvent({ type: CANVAS_EVENT.clickCanvas });
     },
-    [send]
+    [sendEvent]
   );
 
-  const { handleMouseUp, handleMouseDown, handleMouseMove } =
+  const { canvasRef, handleMouseUp, handleMouseDown, handleMouseMove } =
     useHandleUserEvents({
-      sendEvent: send,
-      convasState: convasState as CanvasStateType,
+      sendEvent,
+      editorState,
     });
 
   return (
@@ -77,7 +74,10 @@ const Canvas: FC<Props> = ({ drawObjects = [], width = 500, height = 500 }) => {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      <BackGround onClick={handleClickCanvas} />
+      <BackGround
+        onClick={handleClickCanvas}
+        data-role={ELEMENT_ROLE.background}
+      />
       {activeDrawObject && (
         <ControlFrame
           width={activeDrawObject.width}
@@ -89,12 +89,13 @@ const Canvas: FC<Props> = ({ drawObjects = [], width = 500, height = 500 }) => {
         />
       )}
 
-      {objs.map((drawObject) => (
-        <Object
+      {drawObjects?.map((drawObject, idx) => (
+        <DrawObjectElement
           draggable="false"
-          key={drawObject.idx}
-          data-active-obj-idx={drawObject.idx}
+          key={idx}
+          data-active-obj-idx={idx}
           data-role={ELEMENT_ROLE.drawObject}
+          data-widget-type={drawObject.widgetType}
           onClick={block}
           style={{
             left: drawObject.x,

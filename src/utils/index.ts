@@ -1,25 +1,28 @@
 import { Point, Dimension, DrawObject, PointDelta } from '../typings';
-import { enableMapSet } from 'immer';
-enableMapSet();
-import produce from 'immer';
+import * as R from 'ramda';
 
 export function block(e) {
   e.stopPropagation();
   e.nativeEvent?.stopImmediatePropagation?.();
 }
 
-export function getUserEventPosition(e): Point {
+export function getUserEventPosition(e, elm: HTMLElement | null): Point {
   const isTouch = e.type.indexOf('touch') !== -1;
   const touch = e?.touches?.[0] || e?.changedTouches?.[0];
   const x = isTouch ? touch.pageX : e.pageX;
   const y = isTouch ? touch.pageY : e.pageY;
-  return { x, y };
+  return { x: x - (elm?.offsetLeft ?? 0), y: y - (elm?.offsetTop ?? 0) };
 }
 
 export function getElementRoleAndObjectIdxFromUserEvent(e) {
   const roleAttrName = 'data-role';
   const activeIdxAttrName = 'data-active-obj-idx';
   const vertixIdxAttrName = 'data-vertix-idx';
+  const widgetTypeAttrName = 'data-widget-type';
+  let widgetType =
+    e.currentTarget?.getAttribute(widgetTypeAttrName) ||
+    e.target?.getAttribute(widgetTypeAttrName);
+
   let idx =
     e.currentTarget?.getAttribute(activeIdxAttrName) ||
     e.target?.getAttribute(activeIdxAttrName);
@@ -43,6 +46,7 @@ export function getElementRoleAndObjectIdxFromUserEvent(e) {
   }
   return {
     role,
+    widgetType,
     idx: !!idx ? parseInt(idx) : idx,
     vertixIdx: !!vertixIdx ? parseInt(vertixIdx) : vertixIdx,
   };
@@ -92,6 +96,21 @@ export const getDimensionDelta = (delta: PointDelta, vertixIdx: number) => {
   }
   return { x, y, width, height };
 };
+
+export const calculateObjDimensions = (delta: Dimension, obj: DrawObject) => {
+  const x = obj.x + delta.x ?? 0;
+  const y = obj.y + delta.y ?? 0;
+  const width =
+    obj.width + (delta.width ?? 0) > 0
+      ? obj.width + (delta.width ?? 0)
+      : delta.width;
+  const height =
+    obj.height + (delta.height ?? 0) > 0
+      ? obj.height + (delta.height ?? 0)
+      : delta.height;
+  return { ...obj, x, y, width, height };
+};
+
 export const updateObjDimensions = (
   delta: Dimension,
   activeDrawObjectIdx: number,
@@ -101,18 +120,10 @@ export const updateObjDimensions = (
     return [];
   }
 
-  const nextState = produce(objs, (draftState) => {
-    const obj = draftState[activeDrawObjectIdx];
-    obj.x += delta.x ?? 0;
-    obj.y += delta.y ?? 0;
-    obj.width =
-      obj.width + (delta.width ?? 0) > 0
-        ? obj.width + (delta.width ?? 0)
-        : delta.width;
-    obj.height =
-      obj.height + (delta.height ?? 0) > 0
-        ? obj.height + (delta.height ?? 0)
-        : delta.height;
-  });
+  const nextState = R.assocPath(
+    [activeDrawObjectIdx],
+    calculateObjDimensions(delta, objs[activeDrawObjectIdx]),
+    objs
+  );
   return nextState;
 };
