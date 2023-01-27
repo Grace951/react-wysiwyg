@@ -95,26 +95,24 @@ export const getDimensionDelta = (delta: PointDelta, vertixIdx: number) => {
 export const updateObjDimensions = (
   delta: Dimension,
   activeDrawObjectIdx: number,
-  setObjs: Function
+  objs: DrawObject[]
 ) => {
   if (activeDrawObjectIdx < 0) {
-    return;
+    return [];
   }
 
-  setObjs((objs: DrawObject[]) => {
-    const nextState = produce(objs, (draftState) => {
-      const obj = draftState[activeDrawObjectIdx];
-      obj.x += delta.x ?? 0;
-      obj.y += delta.y ?? 0;
-      obj.width =
-        obj.width + (delta.width ?? 0) > 0
-          ? obj.width + (delta.width ?? 0)
-          : delta.width;
-      obj.height =
-        obj.height + (delta.height ?? 0) > 0
-          ? obj.height + (delta.height ?? 0)
-          : delta.height;
-    });
-    return nextState;
+  const nextState = produce(objs, (draftState) => {
+    const obj = draftState[activeDrawObjectIdx];
+    obj.x += delta.x ?? 0;
+    obj.y += delta.y ?? 0;
+    obj.width =
+      obj.width + (delta.width ?? 0) > 0
+        ? obj.width + (delta.width ?? 0)
+        : delta.width;
+    obj.height =
+      obj.height + (delta.height ?? 0) > 0
+        ? obj.height + (delta.height ?? 0)
+        : delta.height;
   });
+  return nextState;
 };

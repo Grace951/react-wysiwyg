@@ -78,6 +78,7 @@ const ControlFrame: FC<Props> = ({
       {vertices.map((vertex, idx) => (
         <FrameVertex
           key={idx}
+          draggable="false"
           style={{
             border: '2px solid #0038a9',
             left: vertex.left,
