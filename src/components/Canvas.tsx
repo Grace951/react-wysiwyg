@@ -93,7 +93,7 @@ const Canvas: FC<Props> = ({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      <BackGround data-role={ELEMENT_ROLE.background} />
+      <BackGround draggable="false" data-role={ELEMENT_ROLE.background} />
       {activeDrawObject && (
         <ControlFrame
           width={activeDrawObject.width}

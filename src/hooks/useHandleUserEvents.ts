@@ -31,7 +31,12 @@ function useHandleUserEvents({
           });
           break;
         case ELEMENT_ROLE.drawObject:
-          sendEvent({ type: CANVAS_EVENT.mouseDownOnDrawObj, idx, widgetType });
+          sendEvent({
+            type: CANVAS_EVENT.mouseDownOnDrawObj,
+            idx,
+            widgetType,
+            point: { x, y },
+          });
           break;
         case ELEMENT_ROLE.background:
           sendEvent({ type: CANVAS_EVENT.mouseDownOnCanvas, point: { x, y } });

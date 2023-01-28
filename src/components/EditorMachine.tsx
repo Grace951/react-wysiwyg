@@ -54,10 +54,18 @@ export const editorMachine = createMachine<
             actions: 'mouseDownFrameCtrlVertix',
             target: EDITOR_STATE.resizing,
           },
-          [CANVAS_EVENT.mouseDownOnDrawObj]: {
-            actions: 'mouseDownOnDrawObj',
-            target: EDITOR_STATE.moving,
-          },
+          [CANVAS_EVENT.mouseDownOnDrawObj]: [
+            {
+              actions: 'addDrawObj',
+              target: EDITOR_STATE.adding,
+              cond: 'addDrawObjCondition',
+            },
+            {
+              actions: 'mouseDownOnDrawObj',
+              target: EDITOR_STATE.moving,
+              cond: 'moveObjCondition',
+            },
+          ],
           [CANVAS_EVENT.mouseDownOnCanvas]: [
             {
               actions: 'addDrawObj',
@@ -135,12 +143,13 @@ export const editorMachine = createMachine<
   },
   {
     guards: {
-      addDrawObjCondition: ({ activeWidget, activeDrawObjectIdx }, event) => {
+      addDrawObjCondition: ({ activeWidget }, event) => {
         return (
-          activeWidget !== null &&
-          activeWidget !== WIDGET_TYPE.selectorTool &&
-          activeDrawObjectIdx === -1
+          activeWidget !== null && activeWidget !== WIDGET_TYPE.selectorTool
         );
+      },
+      moveObjCondition: ({ activeWidget }, event) => {
+        return activeWidget === WIDGET_TYPE.selectorTool;
       },
       selectingCondition: ({ activeWidget }, event) => {
         return activeWidget === WIDGET_TYPE.selectorTool;
@@ -148,6 +157,7 @@ export const editorMachine = createMachine<
     },
     actions: {
       startToSelect: assign({
+        selectedObjs: (ctx, event: CanvasEvent) => [],
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
         selectingFrame: (ctx, { point }: CanvasEvent) => ({
           x: point?.x ?? 0,
