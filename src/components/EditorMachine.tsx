@@ -1,5 +1,7 @@
 import { createMachine, assign } from 'xstate';
 
+import * as R from 'ramda';
+
 import {
   updateObjsDimensions,
   getDimensionDelta,
@@ -56,11 +58,6 @@ export const editorMachine = createMachine<
           },
           [CANVAS_EVENT.mouseDownOnCanvas]: [
             {
-              actions: 'removeSelectedObj',
-              target: EDITOR_STATE.normal,
-              cond: 'shouldRemoveSelectedObj',
-            },
-            {
               actions: 'addDrawObj',
               target: EDITOR_STATE.adding,
               cond: 'addDrawObjCondition',
@@ -73,6 +70,12 @@ export const editorMachine = createMachine<
           ],
           [EDITOR_EVENT.selectWidget]: {
             actions: 'selectWidget',
+          },
+          [CANVAS_EVENT.deleteWidget]: {
+            actions: 'deleteWidget',
+          },
+          [CANVAS_EVENT.copyWidget]: {
+            actions: 'copyWidget',
           },
           [CANVAS_EVENT.disable]: EDITOR_STATE.disable,
         },
@@ -138,19 +141,12 @@ export const editorMachine = createMachine<
         );
       },
       selectingCondition: ({ activeWidget }, event) => {
-        return activeWidget === WIDGET_TYPE.selectorTool;
-      },
-      shouldRemoveSelectedObj: (
-        { selectedObjs, activeDrawObjectIdx },
-        event
-      ) => {
-        return selectedObjs?.length > 0 || activeDrawObjectIdx !== -1;
+        return activeWidget === null;
       },
     },
     actions: {
       startToSelect: assign({
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
-        activeWidget: (ctx, event: CanvasEvent) => null,
         selectingFrame: (ctx, { point }: CanvasEvent) => ({
           x: point?.x ?? 0,
           y: point?.y ?? 0,
@@ -180,10 +176,13 @@ export const editorMachine = createMachine<
         activeDrawObjectIdx: ({ selectedObjs }, event: CanvasEvent) => {
           return selectedObjs.length === 1 ? selectedObjs[0] : -1;
         },
-        activeWidget: ({ drawObjects, selectedObjs }, event: CanvasEvent) =>
+        activeWidget: (
+          { drawObjects, activeWidget, selectedObjs },
+          event: CanvasEvent
+        ) =>
           selectedObjs.length === 1
             ? drawObjects[selectedObjs[0]].widgetType
-            : null,
+            : activeWidget,
       }),
       addDrawObj: assign({
         activeDrawObjectIdx: ({ drawObjects }, event: CanvasEvent) =>
@@ -222,13 +221,7 @@ export const editorMachine = createMachine<
         },
       }),
       mouseUpWhenAdding: assign({
-        activeWidget: (
-          { drawObjects, activeDrawObjectIdx, activeWidget },
-          event: CanvasEvent
-        ) => {
-          const obj = drawObjects[activeDrawObjectIdx];
-          return obj.width < 3 && obj.height < 3 ? null : activeWidget;
-        },
+        activeWidget: (ctx, event: CanvasEvent) => null,
         drawObjects: ({ drawObjects, activeDrawObjectIdx }) => {
           const obj = drawObjects[activeDrawObjectIdx];
           return obj.width < 3 && obj.height < 3
@@ -272,8 +265,7 @@ export const editorMachine = createMachine<
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
       }),
       mouseDownOnDrawObj: assign({
-        activeWidget: ({ selectedObjs }, { widgetType }: CanvasEvent) =>
-          selectedObjs.length > 0 ? null : widgetType ?? null,
+        activeWidget: (ctx, event: CanvasEvent) => null,
         activeDrawObjectIdx: ({ selectedObjs }, { idx }: CanvasEvent) =>
           selectedObjs.length > 0 ? -1 : idx ?? -1,
         vertixIdx: (ctx, event: CanvasEvent) => event.vertixIdx ?? -1,
@@ -295,6 +287,40 @@ export const editorMachine = createMachine<
         vertixIdx: (ctx, event: CanvasEvent) => -1,
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
         selectedObjs: (ctx, event: CanvasEvent) => [],
+      }),
+      deleteWidget: assign({
+        activeWidget: (ctx, event: EditorEvent) => event.activeWidget ?? null,
+        vertixIdx: (ctx, event: CanvasEvent) => -1,
+        activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
+        selectedObjs: (ctx, event: CanvasEvent) => [],
+        drawObjects: ({ drawObjects }, { idx }: CanvasEvent) => {
+          if (idx === undefined || idx > drawObjects.length || idx < 0) {
+            return drawObjects;
+          }
+          return R.remove(idx, 1, drawObjects);
+        },
+      }),
+      copyWidget: assign({
+        activeWidget: (ctx, event: EditorEvent) => event.activeWidget ?? null,
+        vertixIdx: (ctx, event: CanvasEvent) => -1,
+        activeDrawObjectIdx: (ctx, { idx }: CanvasEvent) => (idx ?? 0) + 1,
+        selectedObjs: (ctx, event: CanvasEvent) => [],
+        drawObjects: ({ drawObjects }, { idx }: CanvasEvent) => {
+          if (idx === undefined || idx >= drawObjects.length || idx < 0) {
+            return drawObjects;
+          }
+          const obj = drawObjects[idx];
+          return R.insert(
+            idx + 1,
+            {
+              ...obj,
+              x: obj.x + 20,
+              y: obj.y + 20,
+              name: obj.name + ' copy',
+            },
+            drawObjects
+          );
+        },
       }),
     },
   }

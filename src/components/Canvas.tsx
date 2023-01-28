@@ -1,4 +1,4 @@
-import type { FC, ReactEventHandler } from 'react';
+import type { FC } from 'react';
 import { useCallback, useMemo } from 'react';
 
 import styled from 'styled-components';
@@ -13,6 +13,7 @@ import { block } from '../utils';
 import { ELEMENT_ROLE, CANVAS_EVENT, EDITOR_STATE } from '../constants';
 import ControlFrame from './ControlFrame';
 import SelectingFrame from './SelectingFrame';
+import ObjectTools from './ObjectTools';
 
 const Container = styled.div<{ width: number; height: number }>`
   width: ${({ width }) => width}px;
@@ -69,6 +70,20 @@ const Canvas: FC<Props> = ({
       sendEvent,
     });
 
+  const deleteObj = useCallback(
+    (idx: number) => {
+      sendEvent({ type: CANVAS_EVENT.deleteWidget, idx });
+    },
+    [sendEvent]
+  );
+
+  const copyObj = useCallback(
+    (idx: number) => {
+      sendEvent({ type: CANVAS_EVENT.copyWidget, idx });
+    },
+    [sendEvent]
+  );
+
   return (
     <Container
       ref={canvasRef}
@@ -85,7 +100,6 @@ const Canvas: FC<Props> = ({
           height={activeDrawObject.height}
           x={activeDrawObject.x}
           y={activeDrawObject.y}
-          drawObjectIdx={activeDrawObjectIdx}
           vertexSize={10}
         />
       )}
@@ -114,7 +128,11 @@ const Canvas: FC<Props> = ({
             width: drawObject.width,
             height: drawObject.height,
           }}
-        />
+        >
+          {idx === activeDrawObjectIdx && (
+            <ObjectTools copyObj={copyObj} deleteObj={deleteObj} idx={idx} />
+          )}
+        </DrawObjectElement>
       ))}
     </Container>
   );

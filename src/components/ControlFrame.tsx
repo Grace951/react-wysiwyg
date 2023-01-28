@@ -21,7 +21,6 @@ interface Props {
   height: number;
   x: number;
   y: number;
-  drawObjectIdx: number;
   vertexSize: number;
 }
 
