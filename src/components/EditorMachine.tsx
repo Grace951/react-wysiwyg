@@ -131,10 +131,14 @@ export const editorMachine = createMachine<
   {
     guards: {
       addDrawObjCondition: ({ activeWidget, activeDrawObjectIdx }, event) => {
-        return activeWidget !== null && activeDrawObjectIdx === -1;
+        return (
+          activeWidget !== null &&
+          activeWidget !== WIDGET_TYPE.selectorTool &&
+          activeDrawObjectIdx === -1
+        );
       },
       selectingCondition: ({ activeWidget }, event) => {
-        return activeWidget === null;
+        return activeWidget === WIDGET_TYPE.selectorTool;
       },
       shouldRemoveSelectedObj: (
         { selectedObjs, activeDrawObjectIdx },

@@ -1,6 +1,6 @@
 import { createGlobalStyle } from 'styled-components';
 
-const MaterialIconRegular = require('../fonts/MaterialIcons-Regular.ttf');
+const MaterialIconRegular = require('../fonts/MaterialIconsOutlined-Regular.otf');
 
 const GlobalStyle = createGlobalStyle`
 

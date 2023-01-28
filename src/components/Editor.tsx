@@ -10,6 +10,7 @@ import GlobalCSS from '../styles/global';
 import { editorMachine } from './EditorMachine';
 import Canvas from './Canvas';
 import { widgets } from './Widgets';
+import SelectorTool from './Widgets/SelectorTool';
 
 const Container = styled.div`
   display: flex;
