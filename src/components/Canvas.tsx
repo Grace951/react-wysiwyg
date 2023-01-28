@@ -72,14 +72,14 @@ const Canvas: FC<Props> = ({
 
   const deleteObj = useCallback(
     (idx: number) => {
-      sendEvent({ type: CANVAS_EVENT.deleteWidget, idx });
+      sendEvent({ type: CANVAS_EVENT.deleteObject, idx });
     },
     [sendEvent]
   );
 
   const copyObj = useCallback(
     (idx: number) => {
-      sendEvent({ type: CANVAS_EVENT.copyWidget, idx });
+      sendEvent({ type: CANVAS_EVENT.copyObject, idx });
     },
     [sendEvent]
   );

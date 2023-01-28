@@ -164,7 +164,7 @@ export const editorMachine = createMachine<
           height: (selectingFrame?.height ?? 0) + (delta?.dy ?? 0),
         }),
         selectedObjs: (
-          { drawObjects, selectingFrame },
+          { drawObjects = [], selectingFrame },
           { delta }: CanvasEvent
         ) => {
           return drawObjects.reduce<number[]>(
@@ -187,7 +187,7 @@ export const editorMachine = createMachine<
         activeDrawObjectIdx: ({ drawObjects }, event: CanvasEvent) =>
           drawObjects.length,
         drawObjects: (
-          { drawObjects, activeWidget },
+          { drawObjects = [], activeWidget },
           { point }: CanvasEvent
         ) => {
           const idx = drawObjects.filter(
@@ -209,7 +209,7 @@ export const editorMachine = createMachine<
       }),
       addingObj: assign({
         drawObjects: (
-          { drawObjects, activeDrawObjectIdx },
+          { drawObjects = [], activeDrawObjectIdx },
           { delta }: CanvasEvent
         ) => {
           return updateObjsDimensions(
@@ -221,7 +221,7 @@ export const editorMachine = createMachine<
       }),
       mouseUpWhenAdding: assign({
         activeWidget: (ctx, event: CanvasEvent) => WIDGET_TYPE.selectorTool,
-        drawObjects: ({ drawObjects, activeDrawObjectIdx }) => {
+        drawObjects: ({ drawObjects = [], activeDrawObjectIdx }) => {
           const obj = drawObjects[activeDrawObjectIdx];
           return obj.width < 3 && obj.height < 3
             ? drawObjects.slice(0, drawObjects.length - 1)

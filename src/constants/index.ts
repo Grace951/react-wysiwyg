@@ -31,8 +31,8 @@ export const CANVAS_EVENT = {
   mouseUp: 'mouseUp',
   disable: 'disable',
   enable: 'enable',
-  copyWidget: 'copyWidget',
-  deleteWidget: 'deleteWidget',
+  copyObject: 'copyObject',
+  deleteObject: 'deleteObject',
 };
 
 export const EDITOR_EVENT = {
