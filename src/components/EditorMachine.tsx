@@ -202,6 +202,7 @@ export const editorMachine = createMachine<
               height: 0,
               widgetType: activeWidget || WIDGET_TYPE.image,
               layerIdx: 0,
+              angle: 0,
               name: `${activeWidget || WIDGET_TYPE.image} ${idx}`,
             },
           ];
