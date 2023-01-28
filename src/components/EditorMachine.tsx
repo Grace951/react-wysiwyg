@@ -73,11 +73,11 @@ export const editorMachine = createMachine<
           [EDITOR_EVENT.selectWidget]: {
             actions: 'selectWidget',
           },
-          [CANVAS_EVENT.deleteWidget]: {
-            actions: 'deleteWidget',
+          [CANVAS_EVENT.deleteObject]: {
+            actions: 'deleteObject',
           },
-          [CANVAS_EVENT.copyWidget]: {
-            actions: 'copyWidget',
+          [CANVAS_EVENT.copyObject]: {
+            actions: 'copyObject',
           },
           [CANVAS_EVENT.disable]: EDITOR_STATE.disable,
         },
@@ -143,7 +143,7 @@ export const editorMachine = createMachine<
         );
       },
       selectingCondition: ({ activeWidget }, event) => {
-        return activeWidget === null;
+        return activeWidget === WIDGET_TYPE.selectorTool;
       },
     },
     actions: {
@@ -181,10 +181,7 @@ export const editorMachine = createMachine<
         activeWidget: (
           { drawObjects, activeWidget, selectedObjs },
           event: CanvasEvent
-        ) =>
-          selectedObjs.length === 1
-            ? drawObjects[selectedObjs[0]].widgetType
-            : activeWidget,
+        ) => WIDGET_TYPE.selectorTool,
       }),
       addDrawObj: assign({
         activeDrawObjectIdx: ({ drawObjects }, event: CanvasEvent) =>
@@ -223,7 +220,7 @@ export const editorMachine = createMachine<
         },
       }),
       mouseUpWhenAdding: assign({
-        activeWidget: (ctx, event: CanvasEvent) => null,
+        activeWidget: (ctx, event: CanvasEvent) => WIDGET_TYPE.selectorTool,
         drawObjects: ({ drawObjects, activeDrawObjectIdx }) => {
           const obj = drawObjects[activeDrawObjectIdx];
           return obj.width < 3 && obj.height < 3
@@ -282,17 +279,16 @@ export const editorMachine = createMachine<
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => event.vertixIdx ?? -1,
       }),
       clickCanvas: assign({
-        activeWidget: (ctx, event: CanvasEvent) => null,
+        activeWidget: (ctx, event: CanvasEvent) => WIDGET_TYPE.selectorTool,
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
+        selectedObjs: (ctx, event: CanvasEvent) => [],
       }),
       mouseDownOnDrawObj: assign({
-        activeWidget: (ctx, event: CanvasEvent) => null,
         activeDrawObjectIdx: ({ selectedObjs }, { idx }: CanvasEvent) =>
           selectedObjs.length > 0 ? -1 : idx ?? -1,
         vertixIdx: (ctx, event: CanvasEvent) => event.vertixIdx ?? -1,
       }),
       removeSelectedObj: assign({
-        activeWidget: (ctx, event: CanvasEvent) => event.widgetType ?? null,
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => event.idx ?? -1,
         vertixIdx: (ctx, event: CanvasEvent) => event.vertixIdx ?? -1,
         selectedObjs: (ctx, event: CanvasEvent) => [],
@@ -302,6 +298,7 @@ export const editorMachine = createMachine<
       }),
       mouseUp: assign({
         vertixIdx: (ctx, event: CanvasEvent) => -1,
+        activeWidget: (ctx, event: CanvasEvent) => WIDGET_TYPE.selectorTool,
       }),
       selectWidget: assign({
         activeWidget: (ctx, event: EditorEvent) => event.activeWidget ?? null,
@@ -309,8 +306,7 @@ export const editorMachine = createMachine<
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
         selectedObjs: (ctx, event: CanvasEvent) => [],
       }),
-      deleteWidget: assign({
-        activeWidget: (ctx, event: EditorEvent) => event.activeWidget ?? null,
+      deleteObject: assign({
         vertixIdx: (ctx, event: CanvasEvent) => -1,
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
         selectedObjs: (ctx, event: CanvasEvent) => [],
@@ -321,8 +317,7 @@ export const editorMachine = createMachine<
           return R.remove(idx, 1, drawObjects);
         },
       }),
-      copyWidget: assign({
-        activeWidget: (ctx, event: EditorEvent) => event.activeWidget ?? null,
+      copyObject: assign({
         vertixIdx: (ctx, event: CanvasEvent) => -1,
         activeDrawObjectIdx: (ctx, { idx }: CanvasEvent) => (idx ?? 0) + 1,
         selectedObjs: (ctx, event: CanvasEvent) => [],
