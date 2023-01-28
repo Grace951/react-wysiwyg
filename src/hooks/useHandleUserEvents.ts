@@ -65,6 +65,7 @@ function useHandleUserEvents({
       sendEvent({
         type: CANVAS_EVENT.mouseMoving,
         delta: { dx, dy },
+        point: { x, y },
       });
     },
     [sendEvent]

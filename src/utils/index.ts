@@ -41,7 +41,7 @@ export function getElementRoleAndObjectIdxFromUserEvent(e) {
   }
 
   const objElements = e.target.querySelectorAll(`[${activeIdxAttrName}]`);
-  if (elements?.[0]) {
+  if (objElements?.[0]) {
     idx = objElements[0].getAttribute(activeIdxAttrName);
   }
   return {
@@ -92,6 +92,54 @@ export const getDimensionDelta = (delta: PointDelta, vertixIdx: number) => {
       x = delta?.dx || 0;
       width = -delta?.dx || 0;
       height = delta?.dy || 0;
+      break;
+  }
+  return { x, y, width, height };
+};
+
+export const getDimensionDeltaForResize = (
+  delta: PointDelta,
+  vertixIdx: number
+) => {
+  let x = 0;
+  let y = 0;
+  let width = 0;
+  let height = 0;
+
+  switch (vertixIdx) {
+    case 3:
+      width = delta?.dx || 0;
+      break;
+    case 4:
+      width = delta?.dx || 0;
+      height = delta?.dx || 0;
+      break;
+    case 5:
+      height = delta?.dy || 0;
+      break;
+    case 0:
+      x = delta?.dx || 0;
+      y = delta?.dx || 0;
+      width = -delta?.dx || 0;
+      height = -delta?.dx || 0;
+      break;
+    case 1:
+      y = delta?.dy || 0;
+      height = -delta?.dy || 0;
+      break;
+    case 7:
+      x = delta?.dx || 0;
+      width = -delta?.dx || 0;
+      break;
+    case 2:
+      y = -delta?.dx || 0;
+      width = delta?.dx || 0;
+      height = delta?.dx || 0;
+      break;
+    case 6:
+      x = delta?.dx || 0;
+      width = -delta?.dx || 0;
+      height = -delta?.dx || 0;
       break;
   }
   return { x, y, width, height };
@@ -171,4 +219,8 @@ export const mergeTwoRect = (r1: Dimension, r2: Dimension) => {
 export const isInTheFrame = (frame: Dimension, obj: Dimension) => {
   const { width, height } = getIntersectionOfTwoRect(frame, obj);
   return width > 0 && height > 0;
+};
+
+export const getAngle = (p1: Point, p2: Point) => {
+  return (Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180) / Math.PI;
 };

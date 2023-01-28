@@ -101,6 +101,7 @@ const Canvas: FC<Props> = ({
           x={activeDrawObject.x}
           y={activeDrawObject.y}
           vertexSize={10}
+          angle={activeDrawObject.angle}
         />
       )}
 
@@ -113,27 +114,35 @@ const Canvas: FC<Props> = ({
         />
       )}
 
-      {drawObjects?.map((drawObject, idx) => (
-        <DrawObjectElement
-          draggable="false"
-          key={idx}
-          data-active-obj-idx={idx}
-          data-role={ELEMENT_ROLE.drawObject}
-          data-widget-type={drawObject.widgetType}
-          onClick={block}
-          $selected={selectedObjs.includes(idx)}
-          style={{
-            left: drawObject.x,
-            top: drawObject.y,
-            width: drawObject.width,
-            height: drawObject.height,
-          }}
-        >
-          {idx === activeDrawObjectIdx && (
-            <ObjectTools copyObj={copyObj} deleteObj={deleteObj} idx={idx} />
-          )}
-        </DrawObjectElement>
-      ))}
+      {drawObjects?.map((drawObject, idx) => {
+        const styles = {
+          left: drawObject.x,
+          top: drawObject.y,
+          width: drawObject.width,
+          height: drawObject.height,
+          transform: '',
+        };
+
+        if (drawObject.angle) {
+          styles.transform = `rotate(${drawObject.angle}deg)`;
+        }
+        return (
+          <DrawObjectElement
+            draggable="false"
+            key={idx}
+            data-active-obj-idx={idx}
+            data-role={ELEMENT_ROLE.drawObject}
+            data-widget-type={drawObject.widgetType}
+            onClick={block}
+            $selected={selectedObjs.includes(idx)}
+            style={styles}
+          >
+            {idx === activeDrawObjectIdx && (
+              <ObjectTools copyObj={copyObj} deleteObj={deleteObj} idx={idx} />
+            )}
+          </DrawObjectElement>
+        );
+      })}
     </Container>
   );
 };

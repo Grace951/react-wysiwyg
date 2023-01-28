@@ -2,18 +2,41 @@ import type { FC } from 'react';
 import {
   CONTROL_VERTICES_CONFIG,
   DEF_FRAME_VERTEX_SIZE,
-  MAX_XINDEX_VALUE,
   ELEMENT_ROLE,
 } from '../constants';
 import { Vertix } from '../typings';
 
 import styled from 'styled-components';
 
-const FrameVertex = styled.div`
-  background: transparent;
+const Frame = styled.div`
   position: absolute;
-  z-index: ${MAX_XINDEX_VALUE};
   box-sizing: border-box;
+`;
+
+const FrameVertex = styled.div`
+  background: white;
+  position: absolute;
+  box-sizing: border-box;
+`;
+const Rotate = styled.div`
+  width: 100px;
+  height: 2px;
+  position: absolute;
+  box-sizing: border-box;
+  &:after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border: 2px solid #0038a9;
+    display: block;
+    background: white;
+    border-radius: 50%;
+    box-sizing: border-box;
+    position: absolute;
+    right: 0;
+    top: -5px;
+    cursor: grabbing;
+  }
 `;
 
 interface Props {
@@ -22,6 +45,7 @@ interface Props {
   x: number;
   y: number;
   vertexSize: number;
+  angle: number;
 }
 
 const ControlFrame: FC<Props> = ({
@@ -29,40 +53,41 @@ const ControlFrame: FC<Props> = ({
   height = 200,
   x = 0,
   y = 0,
+  angle = 0,
   vertexSize = DEF_FRAME_VERTEX_SIZE,
 }) => {
   const vertices: Vertix[] = [
     {
-      left: x - vertexSize / 2,
-      top: y - vertexSize / 2,
+      left: -vertexSize / 2,
+      top: -vertexSize / 2,
     },
     {
-      left: x + width / 2 - vertexSize / 2,
-      top: y - vertexSize / 2,
+      left: width / 2 - vertexSize / 2,
+      top: -vertexSize / 2,
     },
     {
-      left: x + width - vertexSize / 2,
-      top: y - vertexSize / 2,
+      left: width - vertexSize / 2,
+      top: -vertexSize / 2,
     },
     {
-      left: x + width - vertexSize / 2,
-      top: y + height / 2 - vertexSize / 2,
+      left: width - vertexSize / 2,
+      top: height / 2 - vertexSize / 2,
     },
     {
-      left: x + width - vertexSize / 2,
-      top: y + height - vertexSize / 2,
+      left: width - vertexSize / 2,
+      top: height - vertexSize / 2,
     },
     {
-      left: x + width / 2 - vertexSize / 2,
-      top: y + height - vertexSize / 2,
+      left: width / 2 - vertexSize / 2,
+      top: height - vertexSize / 2,
     },
     {
-      left: x - vertexSize / 2,
-      top: y + height - vertexSize / 2,
+      left: -vertexSize / 2,
+      top: height - vertexSize / 2,
     },
     {
-      left: x - vertexSize / 2,
-      top: y + height / 2 - vertexSize / 2,
+      left: -vertexSize / 2,
+      top: height / 2 - vertexSize / 2,
     },
   ];
 
@@ -72,7 +97,24 @@ const ControlFrame: FC<Props> = ({
   });
 
   return (
-    <>
+    <Frame
+      style={{
+        left: x,
+        top: y,
+        width,
+        height,
+        transform: `rotate(${angle}deg)`,
+      }}
+    >
+      <Rotate
+        data-role={ELEMENT_ROLE.controlFrameVertex}
+        data-vertix-idx="8"
+        style={{
+          background: '#0038a9',
+          left: vertices[2].left + vertexSize / 2,
+          top: vertices[3].top + vertexSize / 2 - 1,
+        }}
+      />
       {vertices.map((vertex, idx) => (
         <FrameVertex
           key={idx}
@@ -90,7 +132,7 @@ const ControlFrame: FC<Props> = ({
           data-vertix-idx={idx}
         />
       ))}
-    </>
+    </Frame>
   );
 };
 

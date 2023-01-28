@@ -37,6 +37,7 @@ const Widget = styled.div<{ $active: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
+  user-select: none;
 `;
 
 interface Props {

@@ -5,7 +5,9 @@ import * as R from 'ramda';
 import {
   updateObjsDimensions,
   getDimensionDelta,
+  getDimensionDeltaForResize,
   isInTheFrame,
+  getAngle,
 } from '../utils';
 import {
   CanvasEvent,
@@ -232,10 +234,29 @@ export const editorMachine = createMachine<
       resizingObj: assign({
         drawObjects: (
           { drawObjects, vertixIdx, activeDrawObjectIdx },
-          { delta }: CanvasEvent
+          { delta, point }: CanvasEvent
         ) => {
+          const obj = drawObjects[activeDrawObjectIdx];
+
+          if (vertixIdx === 8) {
+            return R.update(
+              activeDrawObjectIdx,
+              {
+                ...obj,
+                angle: getAngle(
+                  { x: obj.x + obj.width / 2, y: obj.y + obj.height / 2 },
+                  {
+                    x: point?.x ?? 0,
+                    y: point?.y ?? 0,
+                  }
+                ),
+              },
+              drawObjects
+            );
+          }
+
           return updateObjsDimensions(
-            getDimensionDelta(delta || { dx: 0, dy: 0 }, vertixIdx),
+            getDimensionDeltaForResize(delta || { dx: 0, dy: 0 }, vertixIdx),
             [activeDrawObjectIdx],
             drawObjects
           );
