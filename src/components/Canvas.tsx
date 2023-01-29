@@ -9,7 +9,7 @@ import {
   Dimension,
 } from '../typings';
 import useHandleUserEvents from '../hooks/useHandleUserEvents';
-import { block } from '../utils';
+import { block, getRangeOfMultipleObjs } from '../utils';
 import { ELEMENT_ROLE, CANVAS_EVENT, EDITOR_STATE } from '../constants';
 import ControlFrame from './ControlFrame';
 import SelectingFrame from './SelectingFrame';
@@ -60,10 +60,22 @@ const Canvas: FC<Props> = ({
   editorState,
   sendEvent,
 }) => {
-  const activeDrawObject = useMemo(
-    () => activeDrawObjectIdx >= 0 && drawObjects[activeDrawObjectIdx],
-    [activeDrawObjectIdx, drawObjects]
-  );
+  const selectedFrame = useMemo(() => {
+    const objs =
+      selectedObjs.length > 0
+        ? selectedObjs
+        : activeDrawObjectIdx >= 0
+        ? [activeDrawObjectIdx]
+        : [];
+
+    const frame = getRangeOfMultipleObjs(objs.map((idx) => drawObjects[idx]));
+    return (
+      frame && {
+        ...frame,
+        angle: drawObjects[objs[0]]?.angle ?? 0,
+      }
+    );
+  }, [getRangeOfMultipleObjs, activeDrawObjectIdx, drawObjects, selectedObjs]);
 
   const { canvasRef, handleMouseUp, handleMouseDown, handleMouseMove } =
     useHandleUserEvents({
@@ -94,14 +106,14 @@ const Canvas: FC<Props> = ({
       onMouseUp={handleMouseUp}
     >
       <BackGround draggable="false" data-role={ELEMENT_ROLE.background} />
-      {activeDrawObject && (
+      {selectedFrame && (
         <ControlFrame
-          width={activeDrawObject.width}
-          height={activeDrawObject.height}
-          x={activeDrawObject.x}
-          y={activeDrawObject.y}
+          width={selectedFrame.width}
+          height={selectedFrame.height}
+          x={selectedFrame.x}
+          y={selectedFrame.y}
           vertexSize={10}
-          angle={activeDrawObject.angle}
+          angle={selectedFrame.angle}
         />
       )}
 

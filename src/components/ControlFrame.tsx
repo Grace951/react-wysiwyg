@@ -3,6 +3,7 @@ import {
   CONTROL_VERTICES_CONFIG,
   DEF_FRAME_VERTEX_SIZE,
   ELEMENT_ROLE,
+  ROTATE_IDX,
 } from '../constants';
 import { Vertix } from '../typings';
 
@@ -108,7 +109,7 @@ const ControlFrame: FC<Props> = ({
     >
       <Rotate
         data-role={ELEMENT_ROLE.controlFrameVertex}
-        data-vertix-idx="8"
+        data-vertix-idx={ROTATE_IDX}
         style={{
           background: '#0038a9',
           left: vertices[2].left + vertexSize / 2,

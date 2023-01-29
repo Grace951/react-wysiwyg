@@ -97,52 +97,116 @@ export const getDimensionDelta = (delta: PointDelta, vertixIdx: number) => {
   return { x, y, width, height };
 };
 
-export const getDimensionDeltaForResize = (
-  delta: PointDelta,
-  vertixIdx: number
-) => {
-  let x = 0;
-  let y = 0;
-  let width = 0;
-  let height = 0;
+export const getDimensionDeltaForResize = ({
+  delta,
+  vertixIdx,
+  obj: { x, y, width, height },
+  selectedFrame,
+}: {
+  delta: PointDelta;
+  obj: DrawObject;
+  vertixIdx: number;
+  selectedFrame: Dimension;
+}) => {
+  const dx = delta.dx;
+  const dy = delta.dy;
+  let ratioX = (selectedFrame.width + dx) / selectedFrame.width;
+  let ratioY = (selectedFrame.height + dy) / selectedFrame.height;
+  console.log(delta);
+  let offsetX = 0,
+    offsetY = 0,
+    nX = x,
+    nY = y,
+    nW = width,
+    nH = height;
 
   switch (vertixIdx) {
-    case 3:
-      width = delta?.dx || 0;
-      break;
-    case 4:
-      width = delta?.dx || 0;
-      height = delta?.dx || 0;
-      break;
-    case 5:
-      height = delta?.dy || 0;
-      break;
     case 0:
-      x = delta?.dx || 0;
-      y = delta?.dx || 0;
-      width = -delta?.dx || 0;
-      height = -delta?.dx || 0;
+      ratioX = (selectedFrame.width - dx) / selectedFrame.width;
+      ratioY = ratioX;
+      offsetX = dx;
+      offsetY = offsetX;
+      nW = width * ratioX;
+      nH = height * ratioY;
+      nY =
+        selectedFrame.y +
+        selectedFrame.height -
+        (selectedFrame.y + selectedFrame.height - y) * ratioY;
+      nX =
+        selectedFrame.x +
+        selectedFrame.width -
+        (selectedFrame.x + selectedFrame.width - x) * ratioX;
       break;
     case 1:
-      y = delta?.dy || 0;
-      height = -delta?.dy || 0;
-      break;
-    case 7:
-      x = delta?.dx || 0;
-      width = -delta?.dx || 0;
+      offsetY = dy;
+      ratioY = (selectedFrame.height - dy) / selectedFrame.height;
+      ratioX = 1;
+      nW = width * ratioX;
+      nH = height * ratioY;
+      nX = x;
+      nY =
+        selectedFrame.y +
+        selectedFrame.height -
+        (selectedFrame.y + selectedFrame.height - y) * ratioY;
       break;
     case 2:
-      y = -delta?.dx || 0;
-      width = delta?.dx || 0;
-      height = delta?.dx || 0;
+      offsetY = dy;
+      ratioY = ratioX;
+      nW = width * ratioX;
+      nH = height * ratioY;
+      nX = x;
+      nY =
+        selectedFrame.y +
+        selectedFrame.height -
+        (selectedFrame.y + selectedFrame.height - y) * ratioY;
+      break;
+    case 3:
+      ratioY = 1;
+      nW = width * ratioX;
+      nH = height * ratioY;
+      nX = x;
+      nY = y;
+      break;
+    case 4:
+      ratioY = ratioX;
+      nW = width * ratioX;
+      nH = height * ratioY;
+      nX = x;
+      nY = y;
+      break;
+    case 5:
+      ratioX = 1;
+      nW = width * ratioX;
+      nH = height * ratioY;
+      nX = x;
+      nY = (y - selectedFrame.y + offsetY) * ratioY + selectedFrame.y;
       break;
     case 6:
-      x = delta?.dx || 0;
-      width = -delta?.dx || 0;
-      height = -delta?.dx || 0;
+      ratioX = (selectedFrame.width - dx) / selectedFrame.width;
+      ratioY = ratioX;
+      offsetX = dx;
+      nW = width * ratioX;
+      nH = height * ratioY;
+      nX =
+        selectedFrame.x +
+        selectedFrame.width -
+        (selectedFrame.x + selectedFrame.width - x) * ratioX;
+      nY = (y - selectedFrame.y + offsetY) * ratioY + selectedFrame.y;
+      break;
+    case 7:
+      ratioX = (selectedFrame.width - dx) / selectedFrame.width;
+      ratioY = 1;
+      nW = width * ratioX;
+      nH = height * ratioY;
+      nX =
+        selectedFrame.x +
+        selectedFrame.width -
+        (selectedFrame.x + selectedFrame.width - x) * ratioX;
+      nY = y;
       break;
   }
-  return { x, y, width, height };
+
+  return { x: nX, y: nY, width: nW, height: nH };
 };
 
 export const calculateObjDimension = (delta: Dimension, obj: Dimension) => {
@@ -223,4 +287,33 @@ export const isInTheFrame = (frame: Dimension, obj: Dimension) => {
 
 export const getAngle = (p1: Point, p2: Point) => {
   return (Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180) / Math.PI;
+};
+
+export const getRangeOfMultipleObjs = (objs: DrawObject[]) => {
+  const minMax = objs.reduce(
+    (acc, cur: DrawObject) =>
+      acc && {
+        minX: Math.min(acc.minX, cur.x),
+        maxX: Math.max(acc.maxX, cur.x + cur.width),
+        minY: Math.min(acc.minY, cur.y),
+        maxY: Math.max(acc.maxY, cur.y + cur.height),
+      },
+    objs.length > 0
+      ? {
+          minX: objs[0].x,
+          maxX: objs[0].x + objs[0].width,
+          minY: objs[0].y,
+          maxY: objs[0].y + objs[0].height,
+        }
+      : null
+  );
+
+  return (
+    minMax && {
+      x: minMax.minX,
+      y: minMax.minY,
+      width: minMax.maxX - minMax.minX,
+      height: minMax.maxY - minMax.minY,
+    }
+  );
 };

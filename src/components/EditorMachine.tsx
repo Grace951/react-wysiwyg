@@ -8,6 +8,7 @@ import {
   getDimensionDeltaForResize,
   isInTheFrame,
   getAngle,
+  getRangeOfMultipleObjs,
 } from '../utils';
 import {
   CanvasEvent,
@@ -22,6 +23,7 @@ import {
   CANVAS_EVENT,
   EDITOR_EVENT,
   WIDGET_TYPE,
+  ROTATE_IDX,
 } from '../constants';
 
 interface EditorContext {
@@ -241,12 +243,13 @@ export const editorMachine = createMachine<
       }),
       resizingObj: assign({
         drawObjects: (
-          { drawObjects, vertixIdx, activeDrawObjectIdx },
+          { drawObjects, vertixIdx, activeDrawObjectIdx, selectedObjs = [] },
           { delta, point }: CanvasEvent
         ) => {
           const obj = drawObjects[activeDrawObjectIdx];
 
-          if (vertixIdx === 8) {
+          if (vertixIdx === ROTATE_IDX) {
+            //rotate
             return R.update(
               activeDrawObjectIdx,
               {
@@ -263,9 +266,32 @@ export const editorMachine = createMachine<
             );
           }
 
-          return updateObjsDimensions(
-            getDimensionDeltaForResize(delta || { dx: 0, dy: 0 }, vertixIdx),
-            [activeDrawObjectIdx],
+          const indices =
+            selectedObjs.length > 0
+              ? selectedObjs
+              : activeDrawObjectIdx >= 0
+              ? [activeDrawObjectIdx]
+              : [];
+
+          const selectedFrame = getRangeOfMultipleObjs(
+            selectedObjs.map((idx) => drawObjects[idx])
+          );
+
+          return indices.reduce(
+            (acc, cur) =>
+              R.update(
+                cur,
+                {
+                  ...drawObjects[cur],
+                  ...getDimensionDeltaForResize({
+                    delta: delta ?? { dx: 0, dy: 0 },
+                    vertixIdx,
+                    obj: drawObjects[cur],
+                    selectedFrame: selectedFrame || drawObjects[cur],
+                  }),
+                },
+                acc
+              ),
             drawObjects
           );
         },

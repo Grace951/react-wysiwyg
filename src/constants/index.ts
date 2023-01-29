@@ -1,3 +1,4 @@
+export const ROTATE_IDX = 8;
 export const DEF_FRAME_VERTEX_SIZE = 10;
 export const MAX_XINDEX_VALUE = 10000000;
 export const WIDGET_TYPE = {
