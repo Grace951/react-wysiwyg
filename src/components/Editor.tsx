@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 import { useMachine } from '@xstate/react';
 
-import { EDITOR_EVENT } from '../constants';
+import { CANVAS_EVENT } from '../constants';
 import { EditorStateType } from '../typings';
 import GlobalCSS from '../styles/global';
 import { editorMachine } from './EditorMachine';
@@ -64,7 +64,7 @@ const Editor: FC = () => {
     send,
   ] = useMachine(editorMachine, {
     context: {
-      selectingFrame: { x: 0, y: 0, width: 0, height: 0 },
+      selectingFrame: { x: 0, y: 0, width: 0, height: 0, angle: 0 },
       drawObjects: [],
       selectedObjs: [],
       activeWidget: null,
@@ -77,7 +77,7 @@ const Editor: FC = () => {
     (e) => {
       const widgedType = e.currentTarget.getAttribute('data-type');
       send({
-        type: EDITOR_EVENT.selectWidget,
+        type: CANVAS_EVENT.selectWidget,
         activeWidget: widgedType === activeWidget ? null : widgedType,
       });
     },

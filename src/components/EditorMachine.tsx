@@ -11,20 +11,14 @@ import {
   getRangeOfMultipleObjs,
   getRangeOfMultipleRotatedObjs,
 } from '../utils';
-import {
-  CanvasEvent,
-  EditorEvent,
-  DrawObject,
-  WidgetType,
-  Dimension,
-} from '../typings';
+import { CanvasEvent, DrawObject, WidgetType, Dimension } from '../typings';
 
 import {
   EDITOR_STATE,
   CANVAS_EVENT,
-  EDITOR_EVENT,
   WIDGET_TYPE,
-  ROTATE_IDX,
+  FRAME_VERTEX_FOR_ROTATE,
+  FRAME_VERTEX_FOR_ADD,
 } from '../constants';
 
 interface EditorContext {
@@ -36,10 +30,7 @@ interface EditorContext {
   selectingFrame: Dimension;
 }
 
-export const editorMachine = createMachine<
-  EditorContext,
-  CanvasEvent | EditorEvent
->(
+export const editorMachine = createMachine<EditorContext, CanvasEvent>(
   {
     id: 'canvas',
     initial: EDITOR_STATE.normal,
@@ -81,7 +72,7 @@ export const editorMachine = createMachine<
               cond: 'selectingCondition',
             },
           ],
-          [EDITOR_EVENT.selectWidget]: {
+          [CANVAS_EVENT.selectWidget]: {
             actions: 'selectWidget',
           },
           [CANVAS_EVENT.deleteObject]: {
@@ -167,6 +158,7 @@ export const editorMachine = createMachine<
           y: point?.y ?? 0,
           width: 0,
           height: 0,
+          angle: 0,
         }),
       }),
       selectingObjs: assign({
@@ -175,6 +167,7 @@ export const editorMachine = createMachine<
           y: selectingFrame?.y ?? 0,
           width: (selectingFrame?.width ?? 0) + (delta?.dx ?? 0),
           height: (selectingFrame?.height ?? 0) + (delta?.dy ?? 0),
+          angle: selectingFrame?.angle ?? 0,
         }),
         selectedObjs: (
           { drawObjects = [], selectingFrame },
@@ -227,7 +220,7 @@ export const editorMachine = createMachine<
           { delta }: CanvasEvent
         ) => {
           return updateObjsDimensions(
-            getDimensionDelta(delta || { dx: 0, dy: 0 }, 4),
+            getDimensionDelta(delta || { dx: 0, dy: 0 }, FRAME_VERTEX_FOR_ADD),
             [activeDrawObjectIdx],
             drawObjects
           );
@@ -247,7 +240,7 @@ export const editorMachine = createMachine<
           { drawObjects, vertixIdx, activeDrawObjectIdx, selectedObjs = [] },
           { delta, point }: CanvasEvent
         ) => {
-          if (vertixIdx === ROTATE_IDX) {
+          if (vertixIdx === FRAME_VERTEX_FOR_ROTATE) {
             //rotate
             const obj = drawObjects[activeDrawObjectIdx];
             return R.update(
@@ -308,6 +301,7 @@ export const editorMachine = createMachine<
               y: delta?.dy || 0,
               width: 0,
               height: 0,
+              angle: 0,
             },
             selectedObjs.length > 0 ? selectedObjs : [activeDrawObjectIdx],
             drawObjects
@@ -339,7 +333,7 @@ export const editorMachine = createMachine<
         activeWidget: (ctx, event: CanvasEvent) => WIDGET_TYPE.selectorTool,
       }),
       selectWidget: assign({
-        activeWidget: (ctx, event: EditorEvent) => event.activeWidget ?? null,
+        activeWidget: (ctx, event: CanvasEvent) => event.activeWidget ?? null,
         vertixIdx: (ctx, event: CanvasEvent) => -1,
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
         selectedObjs: (ctx, event: CanvasEvent) => [],

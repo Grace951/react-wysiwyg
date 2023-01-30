@@ -64,7 +64,6 @@ const Canvas: FC<Props> = ({
   editorState,
   sendEvent,
 }) => {
-  console.log(editorState);
   const selectedFrame = useMemo(() => {
     const objs =
       selectedObjs.length > 0

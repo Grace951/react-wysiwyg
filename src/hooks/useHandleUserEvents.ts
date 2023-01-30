@@ -17,7 +17,7 @@ function useHandleUserEvents({
   const canvasRef = useRef<HTMLDivElement>(null);
   const previousPoint = useRef<Point | null>(null);
   const handleMouseDown = useCallback(
-    (e: MouseEvent) => {
+    (e: MouseEvent<HTMLElement>) => {
       const { x, y } = getUserEventPosition(e, canvasRef.current);
       previousPoint.current = { x, y };
       const { role, idx, vertixIdx, widgetType } =
@@ -25,26 +25,30 @@ function useHandleUserEvents({
 
       switch (role) {
         case ELEMENT_ROLE.controlFrameVertex:
-          sendEvent({
-            type: CANVAS_EVENT.mouseDownOnCtrlFrameVertix,
-            vertixIdx,
-          });
+          if (vertixIdx !== null) {
+            sendEvent({
+              type: CANVAS_EVENT.mouseDownOnCtrlFrameVertix,
+              vertixIdx,
+            });
+          }
           break;
         case ELEMENT_ROLE.controlFrame:
-          sendEvent({
-            type: CANVAS_EVENT.mouseDownOnDrawObj,
-            idx,
-            widgetType,
-            point: { x, y },
-          });
+          if (idx !== null) {
+            sendEvent({
+              type: CANVAS_EVENT.mouseDownOnDrawObj,
+              idx,
+              point: { x, y },
+            });
+          }
           break;
         case ELEMENT_ROLE.drawObject:
-          sendEvent({
-            type: CANVAS_EVENT.mouseDownOnDrawObj,
-            idx,
-            widgetType,
-            point: { x, y },
-          });
+          if (idx !== null) {
+            sendEvent({
+              type: CANVAS_EVENT.mouseDownOnDrawObj,
+              idx,
+              point: { x, y },
+            });
+          }
           break;
         case ELEMENT_ROLE.background:
           sendEvent({ type: CANVAS_EVENT.mouseDownOnCanvas, point: { x, y } });
@@ -56,7 +60,7 @@ function useHandleUserEvents({
   );
 
   const handleMouseUp = useCallback(
-    (e: MouseEvent) => {
+    (e: MouseEvent<HTMLElement>) => {
       previousPoint.current = null;
       sendEvent({ type: CANVAS_EVENT.mouseUp });
     },
@@ -64,7 +68,7 @@ function useHandleUserEvents({
   );
 
   const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
+    (e: MouseEvent<HTMLElement>) => {
       if (!previousPoint.current) {
         return;
       }

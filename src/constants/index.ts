@@ -1,4 +1,5 @@
-export const ROTATE_IDX = 8;
+export const FRAME_VERTEX_FOR_ROTATE = 8;
+export const FRAME_VERTEX_FOR_ADD = 4;
 export const DEF_FRAME_VERTEX_SIZE = 10;
 export const MAX_XINDEX_VALUE = 10000000;
 export const WIDGET_TYPE = {
@@ -34,9 +35,6 @@ export const CANVAS_EVENT = {
   enable: 'enable',
   copyObject: 'copyObject',
   deleteObject: 'deleteObject',
-};
-
-export const EDITOR_EVENT = {
   selectWidget: 'selectWidget',
 };
 

@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import styled from 'styled-components';
-import { WidgetType, ImageWidgetData } from '../../typings';
+import { ImageWidgetData } from '../../typings';
 import { ELEMENT_ROLE } from '../../constants';
 
 const Object = styled.div`
@@ -12,13 +12,14 @@ const Object = styled.div`
 
 interface Props {
   data: ImageWidgetData;
+  idx: number;
 }
 
-const ImageWidget: FC<Props> = ({ idx, width, height, x, y }) => {
+const ImageWidget: FC<Props> = ({ data, idx }) => {
+  const { width, height, x, y } = data;
   return (
     <Object
       draggable="false"
-      key={idx}
       data-active-obj-idx={idx}
       data-role={ELEMENT_ROLE.drawObject}
       onClick={() => {}}
@@ -31,3 +32,5 @@ const ImageWidget: FC<Props> = ({ idx, width, height, x, y }) => {
     />
   );
 };
+
+export default ImageWidget;

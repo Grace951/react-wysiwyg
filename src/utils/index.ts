@@ -1,54 +1,71 @@
-import { Point, Dimension, DrawObject, PointDelta, Rect } from '../typings';
+import type { MouseEvent } from 'react';
+import { Point, Dimension, DrawObject, PointDelta } from '../typings';
 import * as R from 'ramda';
 
-export function block(e) {
+export function block(e: MouseEvent<HTMLElement>) {
   e.stopPropagation();
   e.nativeEvent?.stopImmediatePropagation?.();
 }
 
-export function getUserEventPosition(e, elm: HTMLElement | null): Point {
+export function getUserEventPosition(
+  e: MouseEvent<HTMLElement>,
+  elm: HTMLElement | null
+): Point {
   const isTouch = e.type.indexOf('touch') !== -1;
-  const touch = e?.touches?.[0] || e?.changedTouches?.[0];
-  const x = isTouch ? touch.pageX : e.pageX;
-  const y = isTouch ? touch.pageY : e.pageY;
+  const touch =
+    e instanceof TouchEvent ? e.touches?.[0] || e.changedTouches?.[0] : null;
+  const x = e instanceof TouchEvent ? touch?.pageX ?? 0 : e.pageX;
+  const y = e instanceof TouchEvent ? touch?.pageY ?? 0 : e.pageY;
   return { x: x - (elm?.offsetLeft ?? 0), y: y - (elm?.offsetTop ?? 0) };
 }
 
-export function getElementRoleAndObjectIdxFromUserEvent(e) {
+export function getElementRoleAndObjectIdxFromUserEvent({
+  currentTarget,
+  target,
+}: MouseEvent<HTMLElement>) {
   const roleAttrName = 'data-role';
   const activeIdxAttrName = 'data-active-obj-idx';
   const vertixIdxAttrName = 'data-vertix-idx';
   const widgetTypeAttrName = 'data-widget-type';
+
   let widgetType =
-    e.currentTarget?.getAttribute(widgetTypeAttrName) ||
-    e.target?.getAttribute(widgetTypeAttrName);
+    currentTarget.getAttribute(widgetTypeAttrName) ??
+    (target instanceof HTMLElement
+      ? target.getAttribute(widgetTypeAttrName)
+      : null);
 
   let idx =
-    e.currentTarget?.getAttribute(activeIdxAttrName) ||
-    e.target?.getAttribute(activeIdxAttrName);
+    currentTarget.getAttribute(activeIdxAttrName) ??
+    (target instanceof HTMLElement
+      ? target.getAttribute(activeIdxAttrName)
+      : null);
 
   let vertixIdx =
-    e.currentTarget?.getAttribute(vertixIdxAttrName) ||
-    e.target?.getAttribute(vertixIdxAttrName);
+    currentTarget.getAttribute(vertixIdxAttrName) ??
+    (target instanceof HTMLElement
+      ? target.getAttribute(vertixIdxAttrName)
+      : null);
 
   let role =
-    e.currentTarget?.getAttribute(roleAttrName) ||
-    e.target?.getAttribute(roleAttrName);
+    currentTarget.getAttribute(roleAttrName) ??
+    (target instanceof HTMLElement ? target.getAttribute(roleAttrName) : null);
 
-  const elements = e.target.querySelectorAll(`[${roleAttrName}]`);
-  if (!role && elements?.[0]) {
-    role = elements[0].getAttribute(roleAttrName);
+  if (target instanceof HTMLElement) {
+    const elements = target.querySelectorAll(`[${roleAttrName}]`);
+    if (!role && elements?.[0]) {
+      role = elements[0].getAttribute(roleAttrName);
+    }
+    const objElements = target.querySelectorAll(`[${activeIdxAttrName}]`);
+    if ((idx === '' || idx === undefined) && objElements?.[0]) {
+      idx = objElements[0].getAttribute(activeIdxAttrName);
+    }
   }
 
-  const objElements = e.target.querySelectorAll(`[${activeIdxAttrName}]`);
-  if ((idx === '' || idx === undefined) && objElements?.[0]) {
-    idx = objElements[0].getAttribute(activeIdxAttrName);
-  }
   return {
     role,
     widgetType,
-    idx: !!idx ? parseInt(idx) : idx,
-    vertixIdx: !!vertixIdx ? parseInt(vertixIdx) : vertixIdx,
+    idx: R.isNil(idx) ? idx : parseInt(idx),
+    vertixIdx: R.isNil(vertixIdx) ? vertixIdx : parseInt(vertixIdx),
   };
 }
 
@@ -94,7 +111,7 @@ export const getDimensionDelta = (delta: PointDelta, vertixIdx: number) => {
       height = delta?.dy || 0;
       break;
   }
-  return { x, y, width, height };
+  return { x, y, width, height, angle: 0 };
 };
 
 export const getDimensionDeltaForResize = ({
@@ -170,8 +187,8 @@ export const getDimensionDeltaForResize = ({
       ratioY = ratioX;
       nW = width * ratioX;
       nH = height * ratioY;
-      nX = x;
-      nY = y;
+      nX = (x - selectedFrame.x + offsetX) * ratioX + selectedFrame.x;
+      nY = (y - selectedFrame.y + offsetY) * ratioY + selectedFrame.y;
       break;
     case 5:
       ratioX = 1;
@@ -372,6 +389,7 @@ export const getRangeOfMultipleRotatedObjs = (
             maxX: Math.max(acc.maxX, maxX),
             minY: Math.min(acc.minY, minY),
             maxY: Math.max(acc.maxY, maxY),
+            angle: 0,
           }
         );
       }
@@ -381,6 +399,7 @@ export const getRangeOfMultipleRotatedObjs = (
           maxX: Math.max(acc.maxX, cur.x + cur.width),
           minY: Math.min(acc.minY, cur.y),
           maxY: Math.max(acc.maxY, cur.y + cur.height),
+          angle: 0,
         }
       );
     },
@@ -390,6 +409,7 @@ export const getRangeOfMultipleRotatedObjs = (
           maxX: objs[0].x + objs[0].width,
           minY: objs[0].y,
           maxY: objs[0].y + objs[0].height,
+          angle: 0,
         }
       : null
   );
@@ -399,6 +419,7 @@ export const getRangeOfMultipleRotatedObjs = (
       y: minMax.minY,
       width: minMax.maxX - minMax.minX,
       height: minMax.maxY - minMax.minY,
+      angle: 0,
     }
   );
 };

@@ -1,7 +1,5 @@
-import type { FC } from 'react';
+import type { FC, MouseEvent } from 'react';
 import { MAX_XINDEX_VALUE } from '../../constants';
-import Copy from './Copy';
-import Delete from './Delete';
 
 import styled from 'styled-components';
 
@@ -41,10 +39,10 @@ const ObjectTools: FC<Props> = ({
   deleteObj = () => {},
   idx,
 }) => {
-  const handleCopy = (e) => {
+  const handleCopy = (e: MouseEvent<HTMLElement>) => {
     copyObj(idx);
   };
-  const handleDelete = (e) => {
+  const handleDelete = (e: MouseEvent<HTMLElement>) => {
     deleteObj(idx);
   };
   return (
