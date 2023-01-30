@@ -8,7 +8,6 @@ import {
   getDimensionDeltaForResize,
   isInTheFrame,
   getAngle,
-  getRangeOfMultipleObjs,
   getRangeOfMultipleRotatedObjs,
 } from '../utils';
 import { CanvasEvent, DrawObject, WidgetType, Dimension } from '../typings';
@@ -28,6 +27,7 @@ interface EditorContext {
   drawObjects: DrawObject[];
   activeWidget: WidgetType | null;
   selectingFrame: Dimension;
+  selectedMultipleObjsFrame: Dimension | null;
 }
 
 export const editorMachine = createMachine<EditorContext, CanvasEvent>(
@@ -162,6 +162,33 @@ export const editorMachine = createMachine<EditorContext, CanvasEvent>(
         }),
       }),
       selectingObjs: assign({
+        selectedMultipleObjsFrame: (
+          { vertixIdx, drawObjects, selectedObjs = [], activeDrawObjectIdx },
+          { point }: CanvasEvent
+        ) => {
+          const newSelectedFrame = getRangeOfMultipleRotatedObjs(
+            selectedObjs.map((idx) => drawObjects[idx])
+          );
+
+          return newSelectedFrame
+            ? {
+                ...newSelectedFrame,
+                angle:
+                  vertixIdx === FRAME_VERTEX_FOR_ROTATE
+                    ? getAngle(
+                        {
+                          x: newSelectedFrame.x + newSelectedFrame.width / 2,
+                          y: newSelectedFrame.y + newSelectedFrame.height / 2,
+                        },
+                        {
+                          x: point?.x ?? 0,
+                          y: point?.y ?? 0,
+                        }
+                      )
+                    : 0,
+              }
+            : drawObjects[activeDrawObjectIdx];
+        },
         selectingFrame: ({ selectingFrame }, { delta }: CanvasEvent) => ({
           x: selectingFrame?.x ?? 0,
           y: selectingFrame?.y ?? 0,
@@ -236,38 +263,69 @@ export const editorMachine = createMachine<EditorContext, CanvasEvent>(
         },
       }),
       resizingObj: assign({
+        selectedMultipleObjsFrame: (
+          { vertixIdx, drawObjects, selectedObjs = [], activeDrawObjectIdx },
+          { point }: CanvasEvent
+        ) => {
+          const newSelectedFrame = getRangeOfMultipleRotatedObjs(
+            selectedObjs.map((idx) => drawObjects[idx])
+          );
+
+          return newSelectedFrame
+            ? {
+                ...newSelectedFrame,
+                angle:
+                  vertixIdx === FRAME_VERTEX_FOR_ROTATE
+                    ? getAngle(
+                        {
+                          x: newSelectedFrame.x + newSelectedFrame.width / 2,
+                          y: newSelectedFrame.y + newSelectedFrame.height / 2,
+                        },
+                        {
+                          x: point?.x ?? 0,
+                          y: point?.y ?? 0,
+                        }
+                      )
+                    : 0,
+              }
+            : drawObjects[activeDrawObjectIdx];
+        },
         drawObjects: (
           { drawObjects, vertixIdx, activeDrawObjectIdx, selectedObjs = [] },
           { delta, point }: CanvasEvent
         ) => {
+          const selectedMultipleObjsFrame = getRangeOfMultipleRotatedObjs(
+            selectedObjs.map((idx) => drawObjects[idx])
+          );
+
           if (vertixIdx === FRAME_VERTEX_FOR_ROTATE) {
             //rotate
             const obj = drawObjects[activeDrawObjectIdx];
-            return R.update(
-              activeDrawObjectIdx,
-              {
-                ...obj,
-                angle: getAngle(
-                  { x: obj.x + obj.width / 2, y: obj.y + obj.height / 2 },
-                  {
-                    x: point?.x ?? 0,
-                    y: point?.y ?? 0,
-                  }
-                ),
-              },
-              drawObjects
-            );
+
+            if (!selectedObjs.length) {
+              return R.update(
+                activeDrawObjectIdx,
+                {
+                  ...obj,
+                  angle: getAngle(
+                    { x: obj.x + obj.width / 2, y: obj.y + obj.height / 2 },
+                    {
+                      x: point?.x ?? 0,
+                      y: point?.y ?? 0,
+                    }
+                  ),
+                },
+                drawObjects
+              );
+            }
           }
+
           const indices =
             selectedObjs.length > 0
               ? selectedObjs
               : activeDrawObjectIdx >= 0
               ? [activeDrawObjectIdx]
               : [];
-
-          const selectedFrame = getRangeOfMultipleRotatedObjs(
-            selectedObjs.map((idx) => drawObjects[idx])
-          );
 
           const newObjs = indices.reduce(
             (acc, cur) =>
@@ -279,7 +337,8 @@ export const editorMachine = createMachine<EditorContext, CanvasEvent>(
                     delta: delta ?? { dx: 0, dy: 0 },
                     vertixIdx,
                     obj: drawObjects[cur],
-                    selectedFrame: selectedFrame || drawObjects[cur],
+                    selectedFrame:
+                      selectedMultipleObjsFrame || drawObjects[cur],
                   }),
                 },
                 acc

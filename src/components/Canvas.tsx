@@ -51,6 +51,7 @@ interface Props {
   activeDrawObjectIdx: number;
   editorState: EditorStateType;
   selectingFrame: Dimension;
+  selectedMultipleObjsFrame: Dimension | null;
   sendEvent: (e: CanvasEvent) => void;
 }
 
@@ -61,34 +62,17 @@ const Canvas: FC<Props> = ({
   drawObjects = [],
   selectedObjs = [],
   selectingFrame,
+  selectedMultipleObjsFrame,
   editorState,
   sendEvent,
 }) => {
   const selectedFrame = useMemo(() => {
-    const objs =
-      selectedObjs.length > 0
-        ? selectedObjs
-        : activeDrawObjectIdx >= 0
-        ? [activeDrawObjectIdx]
-        : [];
-
-    const frame =
-      selectedObjs.length > 0
-        ? getRangeOfMultipleRotatedObjs(objs.map((idx) => drawObjects[idx]))
-        : drawObjects[activeDrawObjectIdx];
-
-    return (
-      frame && {
-        ...frame,
-        angle:
-          selectedObjs.length > 1
-            ? 0
-            : selectedObjs.length === 1
-            ? 0
-            : drawObjects[activeDrawObjectIdx].angle,
-      }
-    );
-  }, [getRangeOfMultipleObjs, activeDrawObjectIdx, drawObjects, selectedObjs]);
+    return selectedMultipleObjsFrame
+      ? selectedMultipleObjsFrame
+      : activeDrawObjectIdx !== -1
+      ? drawObjects[activeDrawObjectIdx]
+      : null;
+  }, [selectedMultipleObjsFrame, drawObjects, activeDrawObjectIdx]);
 
   const { canvasRef, handleMouseUp, handleMouseDown, handleMouseMove } =
     useHandleUserEvents({
@@ -109,6 +93,7 @@ const Canvas: FC<Props> = ({
     [sendEvent]
   );
 
+  console.log(selectedFrame);
   return (
     <Container
       ref={canvasRef}

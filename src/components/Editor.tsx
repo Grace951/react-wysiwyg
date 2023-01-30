@@ -58,6 +58,7 @@ const Editor: FC = () => {
         drawObjects,
         selectedObjs,
         selectingFrame,
+        selectedMultipleObjsFrame,
       },
       value: editorState,
     },
@@ -65,6 +66,7 @@ const Editor: FC = () => {
   ] = useMachine(editorMachine, {
     context: {
       selectingFrame: { x: 0, y: 0, width: 0, height: 0, angle: 0 },
+      selectedMultipleObjsFrame: null,
       drawObjects: [],
       selectedObjs: [],
       activeWidget: null,
@@ -104,6 +106,7 @@ const Editor: FC = () => {
         drawObjects={drawObjects}
         selectedObjs={selectedObjs}
         selectingFrame={selectingFrame}
+        selectedMultipleObjsFrame={selectedMultipleObjsFrame}
         editorState={editorState as EditorStateType}
         sendEvent={send}
       />
