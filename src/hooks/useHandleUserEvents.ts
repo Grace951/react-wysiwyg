@@ -30,6 +30,14 @@ function useHandleUserEvents({
             vertixIdx,
           });
           break;
+        case ELEMENT_ROLE.controlFrame:
+          sendEvent({
+            type: CANVAS_EVENT.mouseDownOnDrawObj,
+            idx,
+            widgetType,
+            point: { x, y },
+          });
+          break;
         case ELEMENT_ROLE.drawObject:
           sendEvent({
             type: CANVAS_EVENT.mouseDownOnDrawObj,

@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import {
+  MAX_XINDEX_VALUE,
   CONTROL_VERTICES_CONFIG,
   DEF_FRAME_VERTEX_SIZE,
   ELEMENT_ROLE,
@@ -12,6 +13,8 @@ import styled from 'styled-components';
 const Frame = styled.div`
   position: absolute;
   box-sizing: border-box;
+  z-index: ${MAX_XINDEX_VALUE};
+  cursor: move;
 `;
 
 const FrameVertex = styled.div`
@@ -47,6 +50,7 @@ interface Props {
   y: number;
   vertexSize: number;
   angle: number;
+  activeDrawObjectIdx: number;
 }
 
 const ControlFrame: FC<Props> = ({
@@ -56,6 +60,7 @@ const ControlFrame: FC<Props> = ({
   y = 0,
   angle = 0,
   vertexSize = DEF_FRAME_VERTEX_SIZE,
+  activeDrawObjectIdx = -1,
 }) => {
   const vertices: Vertix[] = [
     {
@@ -99,6 +104,8 @@ const ControlFrame: FC<Props> = ({
 
   return (
     <Frame
+      data-active-obj-idx={activeDrawObjectIdx}
+      data-role={ELEMENT_ROLE.controlFrame}
       style={{
         left: x,
         top: y,

@@ -9,7 +9,11 @@ import {
   Dimension,
 } from '../typings';
 import useHandleUserEvents from '../hooks/useHandleUserEvents';
-import { block, getRangeOfMultipleObjs } from '../utils';
+import {
+  block,
+  getRangeOfMultipleObjs,
+  getRangeOfMultipleRotatedObjs,
+} from '../utils';
 import { ELEMENT_ROLE, CANVAS_EVENT, EDITOR_STATE } from '../constants';
 import ControlFrame from './ControlFrame';
 import SelectingFrame from './SelectingFrame';
@@ -60,6 +64,7 @@ const Canvas: FC<Props> = ({
   editorState,
   sendEvent,
 }) => {
+  console.log(editorState);
   const selectedFrame = useMemo(() => {
     const objs =
       selectedObjs.length > 0
@@ -68,11 +73,20 @@ const Canvas: FC<Props> = ({
         ? [activeDrawObjectIdx]
         : [];
 
-    const frame = getRangeOfMultipleObjs(objs.map((idx) => drawObjects[idx]));
+    const frame =
+      selectedObjs.length > 0
+        ? getRangeOfMultipleRotatedObjs(objs.map((idx) => drawObjects[idx]))
+        : drawObjects[activeDrawObjectIdx];
+
     return (
       frame && {
         ...frame,
-        angle: drawObjects[objs[0]]?.angle ?? 0,
+        angle:
+          selectedObjs.length > 1
+            ? 0
+            : selectedObjs.length === 1
+            ? 0
+            : drawObjects[activeDrawObjectIdx].angle,
       }
     );
   }, [getRangeOfMultipleObjs, activeDrawObjectIdx, drawObjects, selectedObjs]);
@@ -114,6 +128,7 @@ const Canvas: FC<Props> = ({
           y={selectedFrame.y}
           vertexSize={10}
           angle={selectedFrame.angle}
+          activeDrawObjectIdx={activeDrawObjectIdx}
         />
       )}
 

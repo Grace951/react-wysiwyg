@@ -9,6 +9,7 @@ import {
   isInTheFrame,
   getAngle,
   getRangeOfMultipleObjs,
+  getRangeOfMultipleRotatedObjs,
 } from '../utils';
 import {
   CanvasEvent,
@@ -246,10 +247,9 @@ export const editorMachine = createMachine<
           { drawObjects, vertixIdx, activeDrawObjectIdx, selectedObjs = [] },
           { delta, point }: CanvasEvent
         ) => {
-          const obj = drawObjects[activeDrawObjectIdx];
-
           if (vertixIdx === ROTATE_IDX) {
             //rotate
+            const obj = drawObjects[activeDrawObjectIdx];
             return R.update(
               activeDrawObjectIdx,
               {
@@ -265,7 +265,6 @@ export const editorMachine = createMachine<
               drawObjects
             );
           }
-
           const indices =
             selectedObjs.length > 0
               ? selectedObjs
@@ -273,11 +272,11 @@ export const editorMachine = createMachine<
               ? [activeDrawObjectIdx]
               : [];
 
-          const selectedFrame = getRangeOfMultipleObjs(
+          const selectedFrame = getRangeOfMultipleRotatedObjs(
             selectedObjs.map((idx) => drawObjects[idx])
           );
 
-          return indices.reduce(
+          const newObjs = indices.reduce(
             (acc, cur) =>
               R.update(
                 cur,
@@ -294,6 +293,8 @@ export const editorMachine = createMachine<
               ),
             drawObjects
           );
+
+          return newObjs;
         },
       }),
       movingObj: assign({

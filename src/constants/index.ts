@@ -41,6 +41,7 @@ export const EDITOR_EVENT = {
 };
 
 export const ELEMENT_ROLE = {
+  controlFrame: 'controlFrame',
   controlFrameVertex: 'controlFrameVertex',
   drawObject: 'drawObject',
   background: 'background',

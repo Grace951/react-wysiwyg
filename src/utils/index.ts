@@ -36,12 +36,12 @@ export function getElementRoleAndObjectIdxFromUserEvent(e) {
     e.target?.getAttribute(roleAttrName);
 
   const elements = e.target.querySelectorAll(`[${roleAttrName}]`);
-  if (elements?.[0]) {
+  if (!role && elements?.[0]) {
     role = elements[0].getAttribute(roleAttrName);
   }
 
   const objElements = e.target.querySelectorAll(`[${activeIdxAttrName}]`);
-  if (objElements?.[0]) {
+  if ((idx === '' || idx === undefined) && objElements?.[0]) {
     idx = objElements[0].getAttribute(activeIdxAttrName);
   }
   return {
@@ -112,7 +112,6 @@ export const getDimensionDeltaForResize = ({
   const dy = delta.dy;
   let ratioX = (selectedFrame.width + dx) / selectedFrame.width;
   let ratioY = (selectedFrame.height + dy) / selectedFrame.height;
-  console.log(delta);
   let offsetX = 0,
     offsetY = 0,
     nX = x,
@@ -289,6 +288,47 @@ export const getAngle = (p1: Point, p2: Point) => {
   return (Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180) / Math.PI;
 };
 
+export const getRotatedPoint = (
+  angle: number,
+  { x, y }: Point,
+  { x: cx, y: cy }: Point
+) => {
+  const nX = (x - cx) * Math.cos(angle) - (y - cy) * Math.sin(angle) + cx;
+  const nY = (x - cx) * Math.sin(angle) + (y - cy) * Math.cos(angle) + cy;
+  return { x: nX, y: nY };
+};
+
+export const getRotatedDimension = (obj: DrawObject) => {
+  const angle = (obj.angle * Math.PI) / 180;
+  const centerPoint = { x: obj.x + obj.width / 2, y: obj.y + obj.height / 2 };
+  const points = [
+    { x: obj.x, y: obj.y },
+    { x: obj.x + obj.width, y: obj.y },
+    { x: obj.x, y: obj.y + obj.height },
+    { x: obj.x + obj.width, y: obj.y + obj.height },
+  ].map((point) => getRotatedPoint(angle, point, centerPoint));
+
+  const minMax = points.reduce(
+    (acc, cur: Point) => {
+      return (
+        acc && {
+          minX: Math.min(acc.minX, cur.x),
+          maxX: Math.max(acc.maxX, cur.x),
+          minY: Math.min(acc.minY, cur.y),
+          maxY: Math.max(acc.maxY, cur.y),
+        }
+      );
+    },
+    {
+      minX: points[0].x,
+      maxX: points[0].x,
+      minY: points[0].y,
+      maxY: points[0].y,
+    }
+  );
+  return minMax;
+};
+
 export const getRangeOfMultipleObjs = (objs: DrawObject[]) => {
   const minMax = objs.reduce(
     (acc, cur: DrawObject) =>
@@ -308,6 +348,51 @@ export const getRangeOfMultipleObjs = (objs: DrawObject[]) => {
       : null
   );
 
+  return (
+    minMax && {
+      x: minMax.minX,
+      y: minMax.minY,
+      width: minMax.maxX - minMax.minX,
+      height: minMax.maxY - minMax.minY,
+    }
+  );
+};
+
+export const getRangeOfMultipleRotatedObjs = (
+  objs: DrawObject[],
+  rotate = true
+) => {
+  const minMax = objs.reduce(
+    (acc, cur: DrawObject) => {
+      if (rotate) {
+        const { minX, maxX, minY, maxY } = getRotatedDimension(cur);
+        return (
+          acc && {
+            minX: Math.min(acc.minX, minX),
+            maxX: Math.max(acc.maxX, maxX),
+            minY: Math.min(acc.minY, minY),
+            maxY: Math.max(acc.maxY, maxY),
+          }
+        );
+      }
+      return (
+        acc && {
+          minX: Math.min(acc.minX, cur.x),
+          maxX: Math.max(acc.maxX, cur.x + cur.width),
+          minY: Math.min(acc.minY, cur.y),
+          maxY: Math.max(acc.maxY, cur.y + cur.height),
+        }
+      );
+    },
+    objs.length > 0
+      ? {
+          minX: objs[0].x,
+          maxX: objs[0].x + objs[0].width,
+          minY: objs[0].y,
+          maxY: objs[0].y + objs[0].height,
+        }
+      : null
+  );
   return (
     minMax && {
       x: minMax.minX,
