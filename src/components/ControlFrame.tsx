@@ -104,7 +104,7 @@ const ControlFrame: FC<Props> = ({
 
   return (
     <Frame
-      data-active-obj-idx={activeDrawObjectIdx}
+      data-obj-idx={activeDrawObjectIdx}
       data-role={ELEMENT_ROLE.controlFrame}
       style={{
         left: x,
@@ -114,15 +114,17 @@ const ControlFrame: FC<Props> = ({
         transform: `rotate(${angle}deg)`,
       }}
     >
-      <Rotate
-        data-role={ELEMENT_ROLE.controlFrameVertex}
-        data-vertix-idx={FRAME_VERTEX_FOR_ROTATE}
-        style={{
-          background: '#0038a9',
-          left: vertices[2].left + vertexSize / 2,
-          top: vertices[3].top + vertexSize / 2 - 1,
-        }}
-      />
+      {activeDrawObjectIdx !== -1 && (
+        <Rotate
+          data-role={ELEMENT_ROLE.controlFrameVertex}
+          data-vertix-idx={FRAME_VERTEX_FOR_ROTATE}
+          style={{
+            background: '#0038a9',
+            left: vertices[2].left + vertexSize / 2,
+            top: vertices[3].top + vertexSize / 2 - 1,
+          }}
+        />
+      )}
       {vertices.map((vertex, idx) => (
         <FrameVertex
           key={idx}

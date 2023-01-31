@@ -20,7 +20,7 @@ const ImageWidget: FC<Props> = ({ data, idx }) => {
   return (
     <Object
       draggable="false"
-      data-active-obj-idx={idx}
+      data-obj-idx={idx}
       data-role={ELEMENT_ROLE.drawObject}
       onClick={() => {}}
       style={{

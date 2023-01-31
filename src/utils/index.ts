@@ -24,7 +24,7 @@ export function getElementRoleAndObjectIdxFromUserEvent({
   target,
 }: MouseEvent<HTMLElement>) {
   const roleAttrName = 'data-role';
-  const activeIdxAttrName = 'data-active-obj-idx';
+  const objIdxAttrName = 'data-obj-idx';
   const vertixIdxAttrName = 'data-vertix-idx';
   const widgetTypeAttrName = 'data-widget-type';
 
@@ -35,9 +35,9 @@ export function getElementRoleAndObjectIdxFromUserEvent({
       : null);
 
   let idx =
-    currentTarget.getAttribute(activeIdxAttrName) ??
+    currentTarget.getAttribute(objIdxAttrName) ??
     (target instanceof HTMLElement
-      ? target.getAttribute(activeIdxAttrName)
+      ? target.getAttribute(objIdxAttrName)
       : null);
 
   let vertixIdx =
@@ -55,9 +55,9 @@ export function getElementRoleAndObjectIdxFromUserEvent({
     if (!role && elements?.[0]) {
       role = elements[0].getAttribute(roleAttrName);
     }
-    const objElements = target.querySelectorAll(`[${activeIdxAttrName}]`);
+    const objElements = target.querySelectorAll(`[${objIdxAttrName}]`);
     if ((idx === '' || idx === undefined) && objElements?.[0]) {
-      idx = objElements[0].getAttribute(activeIdxAttrName);
+      idx = objElements[0].getAttribute(objIdxAttrName);
     }
   }
 

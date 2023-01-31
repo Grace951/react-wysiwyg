@@ -7,13 +7,10 @@ import {
   DrawObject,
   CanvasEvent,
   Dimension,
+  SelectedFrame,
 } from '../typings';
 import useHandleUserEvents from '../hooks/useHandleUserEvents';
-import {
-  block,
-  getRangeOfMultipleObjs,
-  getRangeOfMultipleRotatedObjs,
-} from '../utils';
+import { block } from '../utils';
 import { ELEMENT_ROLE, CANVAS_EVENT, EDITOR_STATE } from '../constants';
 import ControlFrame from './ControlFrame';
 import SelectingFrame from './SelectingFrame';
@@ -51,7 +48,7 @@ interface Props {
   activeDrawObjectIdx: number;
   editorState: EditorStateType;
   selectingFrame: Dimension;
-  selectedMultipleObjsFrame: Dimension | null;
+  selectedMultipleObjsFrame: SelectedFrame | null;
   sendEvent: (e: CanvasEvent) => void;
 }
 
@@ -93,7 +90,6 @@ const Canvas: FC<Props> = ({
     [sendEvent]
   );
 
-  console.log(selectedFrame);
   return (
     <Container
       ref={canvasRef}
@@ -103,7 +99,11 @@ const Canvas: FC<Props> = ({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      <BackGround draggable="false" data-role={ELEMENT_ROLE.background} />
+      <BackGround
+        draggable="false"
+        data-role={ELEMENT_ROLE.background}
+        data-obj-idx={-1}
+      />
       {selectedFrame && (
         <ControlFrame
           width={selectedFrame.width}
@@ -111,7 +111,7 @@ const Canvas: FC<Props> = ({
           x={selectedFrame.x}
           y={selectedFrame.y}
           vertexSize={10}
-          angle={selectedFrame.angle}
+          angle={selectedFrame?.angle ?? 0}
           activeDrawObjectIdx={activeDrawObjectIdx}
         />
       )}
@@ -141,7 +141,7 @@ const Canvas: FC<Props> = ({
           <DrawObjectElement
             draggable="false"
             key={idx}
-            data-active-obj-idx={idx}
+            data-obj-idx={idx}
             data-role={ELEMENT_ROLE.drawObject}
             data-widget-type={drawObject.widgetType}
             onClick={block}

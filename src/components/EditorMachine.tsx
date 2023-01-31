@@ -10,7 +10,13 @@ import {
   getAngle,
   getRangeOfMultipleRotatedObjs,
 } from '../utils';
-import { CanvasEvent, DrawObject, WidgetType, Dimension } from '../typings';
+import {
+  CanvasEvent,
+  DrawObject,
+  WidgetType,
+  Dimension,
+  SelectedFrame,
+} from '../typings';
 
 import {
   EDITOR_STATE,
@@ -27,7 +33,7 @@ interface EditorContext {
   drawObjects: DrawObject[];
   activeWidget: WidgetType | null;
   selectingFrame: Dimension;
-  selectedMultipleObjsFrame: Dimension | null;
+  selectedMultipleObjsFrame: SelectedFrame | null;
 }
 
 export const editorMachine = createMachine<EditorContext, CanvasEvent>(
@@ -153,6 +159,7 @@ export const editorMachine = createMachine<EditorContext, CanvasEvent>(
       startToSelect: assign({
         selectedObjs: (ctx, event: CanvasEvent) => [],
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
+        selectedMultipleObjsFrame: (ctx, event: CanvasEvent) => null,
         selectingFrame: (ctx, { point }: CanvasEvent) => ({
           x: point?.x ?? 0,
           y: point?.y ?? 0,
@@ -162,6 +169,7 @@ export const editorMachine = createMachine<EditorContext, CanvasEvent>(
         }),
       }),
       selectingObjs: assign({
+        activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
         selectedMultipleObjsFrame: (
           { vertixIdx, drawObjects, selectedObjs = [], activeDrawObjectIdx },
           { point }: CanvasEvent
@@ -194,7 +202,6 @@ export const editorMachine = createMachine<EditorContext, CanvasEvent>(
           y: selectingFrame?.y ?? 0,
           width: (selectingFrame?.width ?? 0) + (delta?.dx ?? 0),
           height: (selectingFrame?.height ?? 0) + (delta?.dy ?? 0),
-          angle: selectingFrame?.angle ?? 0,
         }),
         selectedObjs: (
           { drawObjects = [], selectingFrame },
@@ -208,9 +215,6 @@ export const editorMachine = createMachine<EditorContext, CanvasEvent>(
         },
       }),
       mouseUpWhenSelecting: assign({
-        activeDrawObjectIdx: ({ selectedObjs }, event: CanvasEvent) => {
-          return selectedObjs.length === 1 ? selectedObjs[0] : -1;
-        },
         activeWidget: (
           { drawObjects, activeWidget, selectedObjs },
           event: CanvasEvent
@@ -350,6 +354,16 @@ export const editorMachine = createMachine<EditorContext, CanvasEvent>(
         },
       }),
       movingObj: assign({
+        selectedMultipleObjsFrame: (
+          { drawObjects, selectedObjs = [], activeDrawObjectIdx },
+          { point }: CanvasEvent
+        ) => {
+          const newSelectedFrame = getRangeOfMultipleRotatedObjs(
+            selectedObjs.map((idx) => drawObjects[idx])
+          );
+
+          return newSelectedFrame;
+        },
         drawObjects: (
           { drawObjects, selectedObjs, activeDrawObjectIdx },
           { delta }: CanvasEvent
@@ -360,23 +374,40 @@ export const editorMachine = createMachine<EditorContext, CanvasEvent>(
               y: delta?.dy || 0,
               width: 0,
               height: 0,
-              angle: 0,
             },
             selectedObjs.length > 0 ? selectedObjs : [activeDrawObjectIdx],
             drawObjects
           ),
       }),
       clickDrawObj: assign({
-        activeDrawObjectIdx: (ctx, event: CanvasEvent) => event.vertixIdx ?? -1,
+        activeDrawObjectIdx: (ctx, event: CanvasEvent) => event.idx ?? -1,
+        selectedMultipleObjsFrame: (ctx, event: CanvasEvent) => null,
       }),
       clickCanvas: assign({
         activeWidget: (ctx, event: CanvasEvent) => WIDGET_TYPE.selectorTool,
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
         selectedObjs: (ctx, event: CanvasEvent) => [],
+        selectedMultipleObjsFrame: (ctx, event: CanvasEvent) => null,
       }),
       mouseDownOnDrawObj: assign({
         activeDrawObjectIdx: ({ selectedObjs }, { idx }: CanvasEvent) =>
-          selectedObjs.length > 0 ? -1 : idx ?? -1,
+          idx !== undefined && !selectedObjs.includes(idx)
+            ? idx
+            : selectedObjs.length > 0
+            ? -1
+            : idx ?? -1,
+        selectedObjs: ({ selectedObjs }, { idx }: CanvasEvent) =>
+          idx !== undefined && idx !== -1 && !selectedObjs.includes(idx)
+            ? []
+            : selectedObjs,
+        selectedMultipleObjsFrame: (
+          { selectedObjs, selectedMultipleObjsFrame },
+          { idx }: CanvasEvent
+        ) => {
+          return idx !== undefined && idx !== -1 && !selectedObjs.includes(idx)
+            ? null
+            : selectedMultipleObjsFrame;
+        },
         vertixIdx: (ctx, event: CanvasEvent) => event.vertixIdx ?? -1,
       }),
       removeSelectedObj: assign({
@@ -396,10 +427,12 @@ export const editorMachine = createMachine<EditorContext, CanvasEvent>(
         vertixIdx: (ctx, event: CanvasEvent) => -1,
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
         selectedObjs: (ctx, event: CanvasEvent) => [],
+        selectedMultipleObjsFrame: (ctx, event: CanvasEvent) => null,
       }),
       deleteObject: assign({
         vertixIdx: (ctx, event: CanvasEvent) => -1,
         activeDrawObjectIdx: (ctx, event: CanvasEvent) => -1,
+        selectedMultipleObjsFrame: (ctx, event: CanvasEvent) => null,
         selectedObjs: (ctx, event: CanvasEvent) => [],
         drawObjects: ({ drawObjects }, { idx }: CanvasEvent) => {
           if (idx === undefined || idx > drawObjects.length || idx < 0) {

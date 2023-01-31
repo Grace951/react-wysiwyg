@@ -20,9 +20,8 @@ function useHandleUserEvents({
     (e: MouseEvent<HTMLElement>) => {
       const { x, y } = getUserEventPosition(e, canvasRef.current);
       previousPoint.current = { x, y };
-      const { role, idx, vertixIdx, widgetType } =
+      const { role, idx, vertixIdx } =
         getElementRoleAndObjectIdxFromUserEvent(e);
-
       switch (role) {
         case ELEMENT_ROLE.controlFrameVertex:
           if (vertixIdx !== null) {
