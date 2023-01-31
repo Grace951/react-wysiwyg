@@ -1,28 +1,28 @@
 import type { MouseEvent } from 'react';
-import { Point, Dimension, DrawObject, PointDelta } from '../typings';
+import { Point, Dimension, DrawObject, PointDelta, Frame } from '../typings';
 import * as R from 'ramda';
 
-export function block(e: MouseEvent<HTMLElement>) {
+export const block = (e: MouseEvent<HTMLElement>) => {
   e.stopPropagation();
   e.nativeEvent?.stopImmediatePropagation?.();
-}
+};
 
-export function getUserEventPosition(
+export const getUserEventPosition = (
   e: MouseEvent<HTMLElement>,
   elm: HTMLElement | null
-): Point {
+): Point => {
   const isTouch = e.type.indexOf('touch') !== -1;
   const touch =
     e instanceof TouchEvent ? e.touches?.[0] || e.changedTouches?.[0] : null;
   const x = e instanceof TouchEvent ? touch?.pageX ?? 0 : e.pageX;
   const y = e instanceof TouchEvent ? touch?.pageY ?? 0 : e.pageY;
   return { x: x - (elm?.offsetLeft ?? 0), y: y - (elm?.offsetTop ?? 0) };
-}
+};
 
-export function getElementRoleAndObjectIdxFromUserEvent({
+export const getElementRoleAndObjectIdxFromUserEvent = ({
   currentTarget,
   target,
-}: MouseEvent<HTMLElement>) {
+}: MouseEvent<HTMLElement>) => {
   const roleAttrName = 'data-role';
   const objIdxAttrName = 'data-obj-idx';
   const vertixIdxAttrName = 'data-vertix-idx';
@@ -67,7 +67,7 @@ export function getElementRoleAndObjectIdxFromUserEvent({
     idx: R.isNil(idx) ? idx : parseInt(idx),
     vertixIdx: R.isNil(vertixIdx) ? vertixIdx : parseInt(vertixIdx),
   };
-}
+};
 
 export const getDimensionDelta = (delta: PointDelta, vertixIdx: number) => {
   let x = 0;
@@ -287,6 +287,12 @@ export const getIntersectionOfTwoRect = (r1: Dimension, r2: Dimension) => {
   return { x, y, width: xx - x, height: yy - y };
 };
 
+export const isPointInsideRect = (point: Point, rect: Dimension) =>
+  point.x >= rect.x &&
+  point.x <= rect.x + rect.width &&
+  point.y >= rect.y &&
+  point.y <= rect.y + rect.height;
+
 export const mergeTwoRect = (r1: Dimension, r2: Dimension) => {
   return {
     x: Math.min(r1.x, r2.x),
@@ -294,15 +300,6 @@ export const mergeTwoRect = (r1: Dimension, r2: Dimension) => {
     width: Math.max(r1.width, r2.width),
     height: Math.max(r1.height, r2.height),
   };
-};
-
-export const isInTheFrame = (frame: Dimension, obj: Dimension) => {
-  const { width, height } = getIntersectionOfTwoRect(frame, obj);
-  return width > 0 && height > 0;
-};
-
-export const getAngle = (p1: Point, p2: Point) => {
-  return (Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180) / Math.PI;
 };
 
 export const getRotatedPoint = (
@@ -315,15 +312,44 @@ export const getRotatedPoint = (
   return { x: nX, y: nY };
 };
 
-export const getRotatedDimension = (obj: DrawObject) => {
+export const getRotatedPointsFromObj = (obj: Frame) => {
   const angle = (obj.angle * Math.PI) / 180;
   const centerPoint = { x: obj.x + obj.width / 2, y: obj.y + obj.height / 2 };
-  const points = [
+  return [
     { x: obj.x, y: obj.y },
     { x: obj.x + obj.width, y: obj.y },
     { x: obj.x, y: obj.y + obj.height },
     { x: obj.x + obj.width, y: obj.y + obj.height },
   ].map((point) => getRotatedPoint(angle, point, centerPoint));
+};
+
+export const isInTheFrame = (frame: Frame, obj: Frame) => {
+  const framePoly: Point[] = [
+    { x: frame.x, y: frame.y },
+    { x: frame.x + frame.width, y: frame.y },
+    { x: frame.x, y: frame.y + frame.height },
+    { x: frame.x + frame.width, y: frame.y + frame.height },
+  ];
+
+  const objPoints = getRotatedPointsFromObj(obj);
+  const centerPoint = { x: obj.x + obj.width / 2, y: obj.y + obj.height / 2 };
+  const angle = (-obj.angle * Math.PI) / 180;
+  const framePoints = framePoly.map((point) =>
+    getRotatedPoint(angle, point, centerPoint)
+  );
+
+  return (
+    objPoints.some((point) => isPointInsideRect(point, frame)) ||
+    framePoints.some((point) => isPointInsideRect(point, obj))
+  );
+};
+
+export const getAngle = (p1: Point, p2: Point) => {
+  return (Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180) / Math.PI;
+};
+
+export const getRotatedDimension = (obj: DrawObject) => {
+  const points = getRotatedPointsFromObj(obj);
 
   const minMax = points.reduce(
     (acc, cur: Point) => {

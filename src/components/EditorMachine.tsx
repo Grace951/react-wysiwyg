@@ -15,7 +15,7 @@ import {
   DrawObject,
   WidgetType,
   Dimension,
-  SelectedFrame,
+  Frame,
 } from '../typings';
 
 import {
@@ -32,8 +32,8 @@ interface EditorContext {
   vertixIdx: number;
   drawObjects: DrawObject[];
   activeWidget: WidgetType | null;
-  selectingFrame: Dimension;
-  selectedMultipleObjsFrame: SelectedFrame | null;
+  selectingFrame: Frame;
+  selectedMultipleObjsFrame: Frame | null;
 }
 
 export const editorMachine = createMachine<EditorContext, CanvasEvent>(
@@ -202,11 +202,18 @@ export const editorMachine = createMachine<EditorContext, CanvasEvent>(
           y: selectingFrame?.y ?? 0,
           width: (selectingFrame?.width ?? 0) + (delta?.dx ?? 0),
           height: (selectingFrame?.height ?? 0) + (delta?.dy ?? 0),
+          angle: 0,
         }),
         selectedObjs: (
           { drawObjects = [], selectingFrame },
           { delta }: CanvasEvent
         ) => {
+          const newSelectingFrame = {
+            x: selectingFrame?.x ?? 0,
+            y: selectingFrame?.y ?? 0,
+            width: (selectingFrame?.width ?? 0) + (delta?.dx ?? 0),
+            height: (selectingFrame?.height ?? 0) + (delta?.dy ?? 0),
+          };
           return drawObjects.reduce<number[]>(
             (acc, cur, idx) =>
               isInTheFrame(selectingFrame, cur) ? [...acc, idx] : acc,

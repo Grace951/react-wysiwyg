@@ -7,7 +7,7 @@ import {
   DrawObject,
   CanvasEvent,
   Dimension,
-  SelectedFrame,
+  Frame,
 } from '../typings';
 import useHandleUserEvents from '../hooks/useHandleUserEvents';
 import { block } from '../utils';
@@ -48,7 +48,7 @@ interface Props {
   activeDrawObjectIdx: number;
   editorState: EditorStateType;
   selectingFrame: Dimension;
-  selectedMultipleObjsFrame: SelectedFrame | null;
+  selectedMultipleObjsFrame: Frame | null;
   sendEvent: (e: CanvasEvent) => void;
 }
 
